@@ -1,0 +1,21 @@
+[package]
+name = "holy-maiden-bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+grammers-friendly = { path = "./../grammers-friendly/lib/grammers-friendly/", features = [ "macros" ] }
+
+grammers-client = { git = "https://github.com/Lonami/grammers", features = [ "html" ] }
+grammers-session = { git = "https://github.com/Lonami/grammers" }
+
+log = "0.4.22"
+rbs = "4.5.18"
+toml = "0.8.19"
+tokio = { version = "1.40.0", features = [ "macros", "rt", "rt-multi-thread", "sync", "signal" ] }
+serde = { version = "1.0.209", features = ["derive"] }
+rbatis = "4.5.29"
+env_logger = "0.11.5"
+serde_json = "1.0.128"
+async-trait = "0.1.82"
+rbdc-sqlite = "4.5.5"

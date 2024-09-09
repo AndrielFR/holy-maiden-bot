@@ -1,0 +1,10 @@
+{
+    "language_name": "English (UK)",
+
+    "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
+
+    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/collect</b> - Collect a waifu/husbando\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
+
+    "language": "Select the language you want to use to display messages:",
+    "language_set": "The language has been set to {0}"
+}

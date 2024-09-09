@@ -1,0 +1,7 @@
+/target
+
+*.rs.bk
+*.sqlite*
+*.session
+Cargo.lock
+config.toml
