@@ -3,6 +3,7 @@ pub mod database;
 pub mod handlers;
 pub mod middlewares;
 pub mod modules;
+pub mod utils;
 
 pub use config::Config;
 

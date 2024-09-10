@@ -10,7 +10,7 @@ use rbatis::async_trait;
 
 use crate::{
     database::{Character, GroupCharacter},
-    modules::Database,
+    modules::{Database, I18n},
     Result,
 };
 
@@ -43,6 +43,9 @@ impl SendCharacter {
 impl MiddlewareImpl for SendCharacter {
     async fn call(&mut self, _client: &mut Client, update: &mut Update, data: &mut Data) -> Result {
         let db = data.get_module::<Database>().unwrap();
+        let i18n = data.get_module::<I18n>().unwrap();
+
+        let t = |key| i18n.get(key);
 
         let chat = update.get_chat();
         let message = update.get_message();
@@ -74,9 +77,18 @@ impl MiddlewareImpl for SendCharacter {
                                 Some(self.characters.get(&char.anilist_id).unwrap().clone())
                             }
                         } {
+                            let mut text = crate::utils::shorten_text(char_ani.description, 380);
+                            if text.contains("...") {
+                                text += &format!(
+                                    "\n\n<a href=\"{0}\">{1}</a>",
+                                    char_ani.url,
+                                    t("read_more")
+                                );
+                            }
+
                             let response = message
                                 .respond(
-                                    InputMessage::html(char_ani.description)
+                                    InputMessage::html(text)
                                         .photo_url(char_ani.image.medium)
                                         .invert_media(true),
                                 )
