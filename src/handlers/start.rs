@@ -13,7 +13,7 @@ async fn start(_client: Client, update: Update, data: Data) -> Result {
 
     let message = update.get_message().unwrap();
 
-    let _ = message.reply(InputMessage::html(t("start"))).await?;
+    message.reply(InputMessage::html(t("start"))).await?;
 
     Ok(())
 }

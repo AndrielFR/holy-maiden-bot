@@ -15,10 +15,11 @@ pub struct SaveChat;
 impl MiddlewareImpl for SaveChat {
     async fn call(&mut self, _client: &mut Client, update: &mut Update, data: &mut Data) -> Result {
         let chat = update.get_chat();
+        let sender = update.get_sender();
+
+        let db = data.get_module::<Database>().unwrap();
 
         if let Some(chat) = chat {
-            let db = data.get_module::<Database>().unwrap();
-
             match chat {
                 Chat::User(user) => {
                     if user.is_self() || user.is_bot() {
@@ -64,6 +65,38 @@ impl MiddlewareImpl for SaveChat {
                         Group::insert(&db.get_conn(), &g).await?;
                     }
                 }
+                Chat::Channel(_) => {}
+            }
+        }
+
+        if let Some(sender) = sender {
+            match sender {
+                Chat::User(sender) => {
+                    if User::select_by_id(&db.get_conn(), sender.id())
+                        .await
+                        .ok()
+                        .unwrap()
+                        .is_none()
+                    {
+                        let u = User {
+                            id: sender.id(),
+                            username: sender.username().map(String::from),
+                            first_name: sender.first_name().to_string(),
+                            last_name: sender.last_name().map(String::from),
+                            language_code: sender
+                                .lang_code()
+                                .map(|lang| match lang {
+                                    "en" => "en-GB",
+                                    "pt" => "pt-BR",
+                                    _ => lang,
+                                })
+                                .unwrap()
+                                .to_string(),
+                        };
+                        User::insert(&db.get_conn(), &u).await?;
+                    }
+                }
+                Chat::Group(_) => {}
                 Chat::Channel(_) => {}
             }
         }
