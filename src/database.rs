@@ -1,7 +1,7 @@
 use rbatis::{crud, impl_delete, impl_select, impl_update};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct User {
     pub id: i64,
     pub username: Option<String>,
@@ -15,7 +15,7 @@ impl_delete!(User { delete_by_id(id:i64) => "`where id = #{id}`" }, "users");
 impl_update!(User { update_by_id(id:i64) => "`where id = #{id}`" }, "users");
 impl_select!(User { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "users");
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Group {
     pub id: i64,
     pub username: Option<String>,
@@ -27,7 +27,7 @@ impl_delete!(Group { delete_by_id(id:i64) => "`where id = #{id}`" }, "groups");
 impl_update!(Group { update_by_id(id:i64) => "`where id = #{id}`" }, "groups");
 impl_select!(Group { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "groups");
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Character {
     pub id: i64,
     pub name: String,
@@ -43,10 +43,10 @@ impl_update!(Character { update_by_id(id:i64) => "`where id = #{id}`" }, "charac
 impl_select!(Character { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct GroupCharacter {
-    pub id: i64,
     pub group_id: i64,
+    pub anilist_id: i64,
     pub message_id: i32,
     pub character_id: i64,
     pub collected_by: Option<i64>,
@@ -56,3 +56,4 @@ crud!(GroupCharacter {}, "group_characters");
 impl_delete!(GroupCharacter { delete_by_id(id:i64) => "`where id = #{id}`" }, "group_characters");
 impl_update!(GroupCharacter { update_by_id(id:i64) => "`where id = #{id}`" }, "group_characters");
 impl_select!(GroupCharacter { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "group_characters");
+impl_select!(GroupCharacter { select_latest(group_id:i64) -> Option => "`where group_id = ${group_id} order by id desc limit 1`" }, "group_characters");

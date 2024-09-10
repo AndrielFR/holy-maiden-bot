@@ -48,60 +48,50 @@ impl MiddlewareImpl for SendCharacter {
         let message = update.get_message();
 
         if let Some(message) = message {
-            if let Some(chat) = chat {
-                match chat {
-                    Chat::User(_) => {
-                        return Ok(());
-                    }
-                    Chat::Group(group) => {
-                        let chat_id = group.id();
+            if let Some(Chat::Group(group)) = chat {
+                let chat_id = group.id();
 
-                        let num_messages = self.num_messages.entry(chat_id).or_insert(0);
-                        *num_messages += 1;
+                let num_messages = self.num_messages.entry(chat_id).or_insert(0);
+                *num_messages += 1;
 
-                        let num_needed =
-                            thread_rng().gen_range(self.min_messages..self.max_messages);
-                        if *num_messages >= num_needed {
-                            *num_messages = 0;
-                            if let Some(char) = Character::select_random(&db.get_conn()).await? {
-                                if let Some(char_ani) = {
-                                    if let Entry::Vacant(e) = self.characters.entry(char.anilist_id)
-                                    {
-                                        if let Ok(char_ani) = self
-                                            .ani_client
-                                            .get_char(serde_json::json!({"id": char.anilist_id}))
-                                            .await
-                                        {
-                                            e.insert(char_ani.clone());
-                                            Some(char_ani)
-                                        } else {
-                                            None
-                                        }
-                                    } else {
-                                        Some(self.characters.get(&char.anilist_id).unwrap().clone())
-                                    }
-                                } {
-                                    let response = message
-                                        .respond(
-                                            InputMessage::html(char_ani.description)
-                                                .photo_url(char_ani.image.medium)
-                                                .invert_media(true),
-                                        )
-                                        .await?;
-
-                                    let g = GroupCharacter {
-                                        id: char_ani.id,
-                                        group_id: chat_id,
-                                        message_id: response.id(),
-                                        character_id: char.id,
-                                        collected_by: None,
-                                    };
-                                    GroupCharacter::insert(&db.get_conn(), &g).await?;
+                let num_needed = thread_rng().gen_range(self.min_messages..self.max_messages);
+                if *num_messages >= num_needed {
+                    *num_messages = 0;
+                    if let Some(char) = Character::select_random(&db.get_conn()).await? {
+                        if let Some(char_ani) = {
+                            if let Entry::Vacant(e) = self.characters.entry(char.anilist_id) {
+                                if let Ok(char_ani) = self
+                                    .ani_client
+                                    .get_char(serde_json::json!({"id": char.anilist_id}))
+                                    .await
+                                {
+                                    e.insert(char_ani.clone());
+                                    Some(char_ani)
+                                } else {
+                                    None
                                 }
+                            } else {
+                                Some(self.characters.get(&char.anilist_id).unwrap().clone())
                             }
+                        } {
+                            let response = message
+                                .respond(
+                                    InputMessage::html(char_ani.description)
+                                        .photo_url(char_ani.image.medium)
+                                        .invert_media(true),
+                                )
+                                .await?;
+
+                            let g = GroupCharacter {
+                                group_id: chat_id,
+                                anilist_id: char_ani.id,
+                                message_id: response.id(),
+                                character_id: char.id,
+                                ..Default::default()
+                            };
+                            GroupCharacter::insert(&db.get_conn(), &g).await?;
                         }
                     }
-                    Chat::Channel(_) => {}
                 }
             }
         }
