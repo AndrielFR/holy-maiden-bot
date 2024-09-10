@@ -8,7 +8,11 @@ use grammers_friendly::prelude::*;
 use rand::{thread_rng, Rng};
 use rbatis::async_trait;
 
-use crate::{database::Character, modules::Database, Result};
+use crate::{
+    database::{Character, GroupCharacter},
+    modules::Database,
+    Result,
+};
 
 #[derive(Clone)]
 pub struct SendCharacter {
@@ -77,13 +81,22 @@ impl MiddlewareImpl for SendCharacter {
                                         Some(self.characters.get(&char.anilist_id).unwrap().clone())
                                     }
                                 } {
-                                    message
+                                    let response = message
                                         .respond(
                                             InputMessage::html(char_ani.description)
                                                 .photo_url(char_ani.image.medium)
                                                 .invert_media(true),
                                         )
                                         .await?;
+
+                                    let g = GroupCharacter {
+                                        id: char_ani.id,
+                                        group_id: chat_id,
+                                        message_id: response.id(),
+                                        character_id: char.id,
+                                        collected_by: None,
+                                    };
+                                    GroupCharacter::insert(&db.get_conn(), &g).await?;
                                 }
                             }
                         }

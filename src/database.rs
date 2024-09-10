@@ -42,3 +42,17 @@ impl_delete!(Character { delete_by_id(id:i64) => "`where id = #{id}`" }, "charac
 impl_update!(Character { update_by_id(id:i64) => "`where id = #{id}`" }, "characters");
 impl_select!(Character { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GroupCharacter {
+    pub id: i64,
+    pub group_id: i64,
+    pub message_id: i32,
+    pub character_id: i64,
+    pub collected_by: Option<i64>,
+}
+
+crud!(GroupCharacter {}, "group_characters");
+impl_delete!(GroupCharacter { delete_by_id(id:i64) => "`where id = #{id}`" }, "group_characters");
+impl_update!(GroupCharacter { update_by_id(id:i64) => "`where id = #{id}`" }, "group_characters");
+impl_select!(GroupCharacter { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "group_characters");
