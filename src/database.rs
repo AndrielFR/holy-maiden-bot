@@ -41,3 +41,4 @@ crud!(Character {}, "characters");
 impl_delete!(Character { delete_by_id(id:i64) => "`where id = #{id}`" }, "characters");
 impl_update!(Character { update_by_id(id:i64) => "`where id = #{id}`" }, "characters");
 impl_select!(Character { select_by_id(id:i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
+impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");

@@ -3,7 +3,7 @@ use grammers_friendly::prelude::*;
 use grammers_session::Session;
 use holy_maiden_bot::{
     handlers,
-    middlewares::{SaveChat, SetLocale},
+    middlewares::{SaveChat, SendCharacter, SetLocale},
     modules::{Database, I18n},
     Result,
 };
@@ -25,7 +25,7 @@ async fn main() -> Result {
         api_id: config.telegram.api_id,
         api_hash: config.telegram.api_hash.clone(),
         params: InitParams {
-            catch_up: true,
+            catch_up: false,
             ..Default::default()
         },
     })
@@ -48,9 +48,10 @@ async fn main() -> Result {
         .add_module(I18n::new("en-GB"))
         .add_middleware(Middleware::new(SaveChat, Before))
         .add_middleware(Middleware::new(SetLocale::default(), Before))
-        .add_router(handlers::start::router())
-        .add_router(handlers::help::router())
-        .add_router(handlers::language::router())
+        .add_middleware(Middleware::new(SendCharacter::new(80..160), Before))
+        .add_router(handlers::start())
+        .add_router(handlers::help())
+        .add_router(handlers::language())
         .run(client.clone())
         .await?;
 

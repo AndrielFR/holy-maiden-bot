@@ -1,6 +1,10 @@
 pub mod collect;
 pub mod delete;
-pub mod help;
-pub mod language;
+mod help;
+mod language;
 pub mod list;
-pub mod start;
+mod start;
+
+pub use help::router as help;
+pub use language::router as language;
+pub use start::router as start;
