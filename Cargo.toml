@@ -9,8 +9,12 @@ grammers-friendly = { path = "./../grammers-friendly/lib/grammers-friendly/", fe
 grammers-client = { git = "https://github.com/Lonami/grammers", features = [ "html" ] }
 grammers-session = { git = "https://github.com/Lonami/grammers" }
 
+# rust-anilist = { git = "https://github.com/AndrielFR/rust-anilist" }
+rust-anilist = { path = "./../rust-anilist" }
+
 log = "0.4.22"
 rbs = "4.5.18"
+rand = "0.8.5"
 toml = "0.8.19"
 tokio = { version = "1.40.0", features = [ "macros", "rt", "rt-multi-thread", "sync", "signal" ] }
 serde = { version = "1.0.209", features = ["derive"] }

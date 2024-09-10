@@ -1,4 +1,7 @@
-use std::{collections::HashMap, ops::Range};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    ops::Range,
+};
 
 use grammers_client::{types::Chat, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
@@ -12,6 +15,7 @@ pub struct SendCharacter {
     min_messages: i64,
     max_messages: i64,
 
+    characters: HashMap<i64, rust_anilist::models::Character>,
     num_messages: HashMap<i64, i64>,
 
     ani_client: rust_anilist::Client,
@@ -23,6 +27,7 @@ impl SendCharacter {
             min_messages: range.start,
             max_messages: range.end,
 
+            characters: HashMap::new(),
             num_messages: HashMap::new(),
 
             ani_client: rust_anilist::Client::default(),
@@ -55,15 +60,28 @@ impl MiddlewareImpl for SendCharacter {
                         if *num_messages >= num_needed {
                             *num_messages = 0;
                             if let Some(char) = Character::select_random(&db.get_conn()).await? {
-                                if let Ok(char_ani) = self
-                                    .ani_client
-                                    .get_char(serde_json::json!({"id": char.anilist_id}))
-                                    .await
-                                {
+                                if let Some(char_ani) = {
+                                    if let Entry::Vacant(e) = self.characters.entry(char.anilist_id)
+                                    {
+                                        if let Ok(char_ani) = self
+                                            .ani_client
+                                            .get_char(serde_json::json!({"id": char.anilist_id}))
+                                            .await
+                                        {
+                                            e.insert(char_ani.clone());
+                                            Some(char_ani)
+                                        } else {
+                                            None
+                                        }
+                                    } else {
+                                        Some(self.characters.get(&char.anilist_id).unwrap().clone())
+                                    }
+                                } {
                                     message
-                                        .reply(
+                                        .respond(
                                             InputMessage::html(char_ani.description)
-                                                .photo_url(char_ani.image.medium),
+                                                .photo_url(char_ani.image.medium)
+                                                .invert_media(true),
                                         )
                                         .await?;
                                 }

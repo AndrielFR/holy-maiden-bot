@@ -34,7 +34,7 @@ pub struct Character {
     pub value: u16,
     pub stars: u8,
     pub gender: String,
-    pub anilist_id: Option<i64>,
+    pub anilist_id: i64,
 }
 
 crud!(Character {}, "characters");
