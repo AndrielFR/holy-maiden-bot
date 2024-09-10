@@ -44,7 +44,7 @@ impl MiddlewareImpl for SaveChat {
                                     "pt" => "pt-BR",
                                     _ => lang,
                                 })
-                                .unwrap()
+                                .unwrap_or("en-GB")
                                 .to_string(),
                         };
                         User::insert(&db.get_conn(), &u).await?;
@@ -90,7 +90,7 @@ impl MiddlewareImpl for SaveChat {
                                     "pt" => "pt-BR",
                                     _ => lang,
                                 })
-                                .unwrap()
+                                .unwrap_or("en-GB")
                                 .to_string(),
                         };
                         User::insert(&db.get_conn(), &u).await?;
