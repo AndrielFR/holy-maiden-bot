@@ -1,5 +1,5 @@
 mod database;
 mod i18n;
 
-pub use database::Database;
+pub use database::{Database, GetChatById};
 pub use i18n::I18n;

@@ -22,9 +22,11 @@ impl MiddlewareImpl for SaveChat {
         let chat = update.get_chat();
         let sender = update.get_sender();
 
-        let db = data.get_module::<Database>().unwrap();
+        let mut db = data.get_module::<Database>().unwrap();
 
         if let Some(chat) = chat {
+            db.save_chat(chat.clone());
+
             match chat {
                 Chat::User(user) => {
                     if user.is_self() || user.is_bot() {
