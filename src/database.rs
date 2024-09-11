@@ -31,7 +31,6 @@ impl_select!(Group { select_by_id(id: i64) -> Option => "`where id = #{id} limit
 pub struct Character {
     pub id: i64,
     pub name: String,
-    pub value: u16,
     pub stars: u8,
     pub gender: String,
     pub anilist_id: i64,

@@ -44,7 +44,7 @@ async fn list(_client: Client, update: Update, data: Data) -> Result<()> {
             let user = message.sender().unwrap();
             let user_id = user.id();
 
-            get_page_string(&db, &mut text, user_id, group_id, page, page_limit).await?;
+            text += &get_page_string(&db, user_id, group_id, page, page_limit).await?;
 
             if let Ok((page_text, total_pgs)) =
                 get_page_info(&db, user_id, group_id, page, page_limit, t("page")).await
@@ -70,7 +70,7 @@ async fn list(_client: Client, update: Update, data: Data) -> Result<()> {
             let user_id = splitted.get(1).unwrap().parse::<i64>().unwrap();
             page = splitted.get(2).unwrap().parse::<i64>().unwrap() - 1;
 
-            get_page_string(&db, &mut text, user_id, group_id, page, page_limit).await?;
+            text += &get_page_string(&db, user_id, group_id, page, page_limit).await?;
 
             if let Ok((page_text, total_pgs)) =
                 get_page_info(&db, user_id, group_id, page, page_limit, t("page")).await
@@ -96,12 +96,13 @@ async fn list(_client: Client, update: Update, data: Data) -> Result<()> {
 
 async fn get_page_string(
     db: &Database,
-    text: &mut String,
     user_id: i64,
     group_id: i64,
     page: i64,
     page_limit: i64,
-) -> Result<()> {
+) -> Result<String> {
+    let mut text = String::new();
+
     if let Ok(user_characters) =
         UserCharacter::select_page_by_ids(&db.get_conn(), user_id, group_id, page, page_limit).await
     {
@@ -114,17 +115,16 @@ async fn get_page_string(
                     .await
                 {
                     text.push_str(&format!(
-                        "\n- <a href=\"{0}\">{1}</a> - ",
+                        "\n· <a href=\"{0}\">{1}</a> ",
                         char_ani.url, char_ani.name.full
                     ));
-                    // text.push_str(&format!(" <b>V{0}</b> ", character.value));
                     text.push_str('🟊'.to_string().repeat(character.stars as usize).as_str());
                 }
             }
         }
     }
 
-    Ok(())
+    Ok(text)
 }
 
 async fn get_page_info(
