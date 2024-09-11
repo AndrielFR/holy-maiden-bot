@@ -7,5 +7,8 @@
     "help": "Aqui está uma lista de comandos que você pode usar:\n\n<b>/start</b> - Inicia o bot\n<b>/help</b> - Exibe uma lista de comandos\n<b>/language</b> - Altera o idioma usado para exibir mensagens\n\n<b>/collect</b> - Coleta uma waifu/husbando\n<b>/list</b> - Lista todas as waifus/husbandos que você coletou\n<b>/delete</b> - Deleta uma waifu/husbando",
 
     "language": "Selecione o idioma que você deseja usar para exibir mensagens:",
-    "language_set": "O idioma foi alterado para {0}"
+    "language_set": "O idioma foi alterado para {0}",
+
+    "collected": "Você coletou <a href=\"{0}\">{1}</a>!",
+    "already_collected": "Você já coletou <a href=\"{0}\">{1}</a> nesse grupo!"
 }

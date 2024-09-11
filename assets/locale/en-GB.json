@@ -7,5 +7,8 @@
     "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/collect</b> - Collect a waifu/husbando\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
 
     "language": "Select the language you want to use to display messages:",
-    "language_set": "The language has been set to {0}"
+    "language_set": "The language has been set to {0}",
+
+    "collected": "You have collected <a href=\"{0}\">{1}</a>!",
+    "already_collected": "You have already collected <a href=\"{0}\">{1}</a> in this group!"
 }

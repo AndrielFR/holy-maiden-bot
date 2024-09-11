@@ -52,6 +52,7 @@ async fn main() -> Result {
         .add_router(handlers::start())
         .add_router(handlers::help())
         .add_router(handlers::language())
+        .add_router(handlers::collect())
         .run(client.clone())
         .await?;
 
