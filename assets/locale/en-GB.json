@@ -1,6 +1,7 @@
 {
     "language_name": "English (UK)",
     "read_more": "Read more",
+    "page": "Page {0} of {1}.",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
 
@@ -10,5 +11,7 @@
     "language_set": "The language has been set to {0}",
 
     "collected": "You have collected <a href=\"{0}\">{1}</a>!",
-    "already_collected": "You have already collected <a href=\"{0}\">{1}</a> in this group!"
+    "already_collected": "You have already collected <a href=\"{0}\">{1}</a> in this group!",
+
+    "list": "Here is a list of all the waifus/husbandos you have collected in this group:"
 }

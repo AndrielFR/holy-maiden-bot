@@ -11,7 +11,7 @@ use holy_maiden_bot::{
 const SESSION_FILE: &str = "holy_maiden.session";
 
 #[tokio::main(flavor = "current_thread")]
-async fn main() -> Result {
+async fn main() -> Result<()> {
     // Initialize the logger
     env_logger::init();
 
@@ -53,6 +53,7 @@ async fn main() -> Result {
         .add_router(handlers::help())
         .add_router(handlers::language())
         .add_router(handlers::collect())
+        .add_router(handlers::list())
         .run(client.clone())
         .await?;
 

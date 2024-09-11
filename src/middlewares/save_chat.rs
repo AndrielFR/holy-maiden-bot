@@ -13,7 +13,12 @@ pub struct SaveChat;
 
 #[async_trait]
 impl MiddlewareImpl for SaveChat {
-    async fn call(&mut self, _client: &mut Client, update: &mut Update, data: &mut Data) -> Result {
+    async fn call(
+        &mut self,
+        _client: &mut Client,
+        update: &mut Update,
+        data: &mut Data,
+    ) -> Result<()> {
         let chat = update.get_chat();
         let sender = update.get_sender();
 

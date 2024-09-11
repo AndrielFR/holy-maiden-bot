@@ -7,4 +7,4 @@ pub mod utils;
 
 pub use config::Config;
 
-pub type Result = std::result::Result<(), Box<dyn std::error::Error>>;
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;

@@ -20,7 +20,7 @@ pub fn router() -> Dispatcher {
     ))
 }
 
-async fn collect(_client: Client, update: Update, data: Data) -> Result {
+async fn collect(_client: Client, update: Update, data: Data) -> Result<()> {
     let db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 
@@ -72,6 +72,7 @@ async fn collect(_client: Client, update: Update, data: Data) -> Result {
                             let user_character = UserCharacter {
                                 user_id: sender_id,
                                 group_id,
+                                anilist_id: group_character.anilist_id,
                                 character_id: group_character.character_id,
                             };
                             UserCharacter::insert(&db.get_conn(), &user_character).await?;

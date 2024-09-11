@@ -41,7 +41,12 @@ impl SendCharacter {
 
 #[async_trait]
 impl MiddlewareImpl for SendCharacter {
-    async fn call(&mut self, _client: &mut Client, update: &mut Update, data: &mut Data) -> Result {
+    async fn call(
+        &mut self,
+        _client: &mut Client,
+        update: &mut Update,
+        data: &mut Data,
+    ) -> Result<()> {
         let db = data.get_module::<Database>().unwrap();
         let i18n = data.get_module::<I18n>().unwrap();
 

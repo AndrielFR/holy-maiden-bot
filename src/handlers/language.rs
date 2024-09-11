@@ -19,7 +19,7 @@ pub fn router() -> Dispatcher {
         ))
 }
 
-async fn language(_client: Client, update: Update, data: Data) -> Result {
+async fn language(_client: Client, update: Update, data: Data) -> Result<()> {
     let i18n = data.get_module::<I18n>().unwrap();
     let t = |key| i18n.get(key);
 
@@ -48,7 +48,7 @@ async fn language(_client: Client, update: Update, data: Data) -> Result {
     Ok(())
 }
 
-async fn set_language(_client: Client, update: Update, data: Data) -> Result {
+async fn set_language(_client: Client, update: Update, data: Data) -> Result<()> {
     let db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 

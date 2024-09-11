@@ -62,6 +62,7 @@ impl_select!(GroupCharacter { select_latest_by_group_id(group_id: i64) -> Option
 pub struct UserCharacter {
     pub user_id: i64,
     pub group_id: i64,
+    pub anilist_id: i64,
     pub character_id: i64,
 }
 
@@ -69,3 +70,5 @@ crud!(UserCharacter {}, "user_characters");
 impl_delete!(UserCharacter { delete_by_ids(user_id: i64, group_id: i64, character_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id} and character_id = #{character_id}`" }, "user_characters");
 impl_update!(UserCharacter { update_by_ids(user_id: i64, group_id: i64, character_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id} and character_id = #{character_id}`" }, "user_characters");
 impl_select!(UserCharacter { select_by_ids(user_id: i64, group_id: i64, character_id: i64) -> Option => "`where user_id = #{user_id} and group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "user_characters");
+impl_select!(UserCharacter { select_all_by_ids(user_id: i64, group_id: i64) -> Vec => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "user_characters");
+impl_select!(UserCharacter { select_page_by_ids(user_id: i64, group_id: i64, page: i64, limit: i64) -> Vec => "`where user_id = #{user_id} and group_id = #{group_id} limit #{limit} offset #{page * limit}`" }, "user_characters");
