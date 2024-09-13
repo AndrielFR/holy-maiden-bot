@@ -94,7 +94,7 @@ impl MiddlewareImpl for SendCharacter {
                             let response = message
                                 .respond(
                                     InputMessage::html(text)
-                                        .photo_url(char_ani.image.medium)
+                                        .photo_url(char_ani.image.large)
                                         .invert_media(true),
                                 )
                                 .await?;
