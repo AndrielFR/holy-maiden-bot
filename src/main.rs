@@ -25,6 +25,7 @@ async fn main() -> Result<()> {
         api_id: config.telegram.api_id,
         api_hash: config.telegram.api_hash.clone(),
         params: InitParams {
+            flood_sleep_threshold: 180,
             catch_up: false,
             ..Default::default()
         },
