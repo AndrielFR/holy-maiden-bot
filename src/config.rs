@@ -30,4 +30,6 @@ pub struct Telegram {
 #[derive(Deserialize, Serialize)]
 pub struct Bot {
     pub token: String,
+    pub catch_up: bool,
+    pub flood_sleep_threshold: u32,
 }
