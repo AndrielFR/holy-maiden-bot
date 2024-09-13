@@ -10,8 +10,8 @@ use crate::{
     Result,
 };
 
-pub fn router() -> Dispatcher {
-    Dispatcher::default().add_handler(Handler::new_message(
+pub fn router() -> Router {
+    Router::default().add_handler(Handler::new_message(
         collect,
         filters::private()
             .not()
@@ -20,7 +20,7 @@ pub fn router() -> Dispatcher {
     ))
 }
 
-async fn collect(_client: Client, update: Update, data: Data) -> Result<()> {
+async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 

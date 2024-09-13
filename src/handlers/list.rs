@@ -7,8 +7,8 @@ use crate::{
     Result,
 };
 
-pub fn router() -> Dispatcher {
-    Dispatcher::default()
+pub fn router() -> Router {
+    Router::default()
         .add_handler(Handler::new_message(
             list,
             filters::private().not().and(macros::command!("list")),
@@ -25,7 +25,7 @@ pub fn router() -> Dispatcher {
         ))
 }
 
-async fn list(_client: Client, update: Update, data: Data) -> Result<()> {
+async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 
@@ -97,7 +97,7 @@ async fn list(_client: Client, update: Update, data: Data) -> Result<()> {
     Ok(())
 }
 
-async fn listm(_client: Client, update: Update, data: Data) -> Result<()> {
+async fn listm(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 

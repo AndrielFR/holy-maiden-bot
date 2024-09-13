@@ -3,11 +3,11 @@ use grammers_friendly::prelude::*;
 
 use crate::{modules::I18n, Result};
 
-pub fn router() -> Dispatcher {
-    Dispatcher::default().add_handler(Handler::new_message(help, macros::command!("help")))
+pub fn router() -> Router {
+    Router::default().add_handler(Handler::new_message(help, macros::command!("help")))
 }
 
-async fn help(_client: Client, update: Update, data: Data) -> Result<()> {
+async fn help(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let i18n = data.get_module::<I18n>().unwrap();
     let t = |key| i18n.get(key);
 
