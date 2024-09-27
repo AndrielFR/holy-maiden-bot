@@ -6,8 +6,6 @@ use grammers_session::PackedChat;
 use rbatis::RBatis;
 use rbdc_sqlite::Driver;
 
-const PATH: &str = "./assets/db.sqlite";
-
 #[derive(Clone)]
 pub struct Database {
     conn: RBatis,
@@ -16,15 +14,22 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn connect(&self) {
-        self.conn
-            .link(Driver {}, &format!("sqlite://{}?mode=rwc", PATH))
-            .await
-            .unwrap();
+    pub async fn connect() -> Self {
+        let conn = RBatis::new();
+        conn.init(
+            Driver {},
+            &std::env::var("DATABASE_URL").expect("DATABASE_URL not set"),
+        )
+        .unwrap();
+
+        Self {
+            conn,
+            chats_hash: HashMap::new(),
+        }
     }
 
-    pub fn get_conn(&self) -> RBatis {
-        self.conn.clone()
+    pub fn get_conn(&mut self) -> &mut RBatis {
+        &mut self.conn
     }
 
     pub fn get_chat(&self, id: i64) -> Option<PackedChat> {
@@ -35,17 +40,6 @@ impl Database {
         self.chats_hash
             .entry(chat.id())
             .or_insert_with(|| chat.pack());
-    }
-}
-
-impl Default for Database {
-    fn default() -> Self {
-        let rb = RBatis::new();
-
-        Self {
-            conn: rb,
-            chats_hash: HashMap::new(),
-        }
     }
 }
 

@@ -1,17 +1,21 @@
 {
     "language_name": "English (UK)",
     "read_more": "Read more",
-    "page": "Page {0} of {1}.",
+    "page": "Page {current} of {total}.",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
 
-    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/collect</b> - Collect a waifu/husbando\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/listm</b> - Same as above, but as images\n<b>/delete</b> - Delete a waifu/husbando",
+    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/collect</b> - Collect a waifu/husbando\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
 
     "language": "Select the language you want to use to display messages:",
-    "language_set": "The language has been set to {0}",
+    "language_set": "The language has been set to {new_lang}",
 
-    "collected": "You have collected <a href=\"{0}\">{1}</a>!",
-    "already_collected": "You have already collected <a href=\"{0}\">{1}</a> in this group!",
-
-    "list": "Here is a list of all the waifus/husbandos you have collected in this group:"
+    "new_character": "A mysterious character appears...!\n\nReply to this message with the character's name to collect it.",
+    "no_characters": "You haven't collected any characters.",
+    "has_character": "You have already collected this character.",
+    "max_characters": "You have reached the maximum number of characters you can collect.",
+    "not_a_character": "This is not a valid character.",
+    "wrong_character": "You missed the character's name. Try again.",
+    "expired_character": "This character has expired and can no longer be collected.",
+    "character_collected": "You have collected {name}!"
 }
