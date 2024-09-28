@@ -24,3 +24,9 @@ env_logger = "0.11.5"
 serde_json = "1.0.128"
 async-trait = "0.1.82"
 rbdc-sqlite = "4.5.5"
+
+[profile.release]
+lto = true
+panic = "abort"
+strip = true
+codegen-units = 1

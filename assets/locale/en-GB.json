@@ -1,21 +1,21 @@
 {
     "language_name": "English (UK)",
     "read_more": "Read more",
-    "page": "Page {current} of {total}.",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
 
-    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/collect</b> - Collect a waifu/husbando\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
+    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
 
     "language": "Select the language you want to use to display messages:",
     "language_set": "The language has been set to {new_lang}",
 
-    "new_character": "A mysterious character appears...!\n\nReply to this message with the character's name to collect it.",
-    "no_characters": "You haven't collected any characters.",
-    "has_character": "You have already collected this character.",
-    "max_characters": "You have reached the maximum number of characters you can collect.",
-    "not_a_character": "This is not a valid character.",
-    "wrong_character": "You missed the character's name. Try again.",
-    "expired_character": "This character has expired and can no longer be collected.",
-    "character_collected": "You have collected {name}!"
+    "new_character": "🎰 <b>A mysterious character appears...!</b>\n\n🔥 — Reply to this message with the character's name to collect it.",
+    "no_characters": "Oops! It seems you haven't collected any characters yet. Go get one to use this feature. 🔙",
+    "has_character": "🤚 You already have this character in this group.",
+    "max_characters": "You have reached the maximum number of characters you can collect. ⛔",
+    "not_a_character": "This is not a valid character. ⁉️",
+    "wrong_character": "⚠️ — <b>Oops!</b> The character's name isn't this, try again.",
+    "expired_character": "This character has expired and can no longer be collected. (❌)",
+    "character_escaped": "Oops... the character <details>{name}</details> has escaped! (❌)\n\n🔖 Remember them and be faster next time!",
+    "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥"
 }

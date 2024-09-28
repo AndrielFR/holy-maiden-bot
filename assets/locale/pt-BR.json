@@ -1,21 +1,20 @@
 {
     "language_name": "Português (BR)",
-    "read_more": "Leia mais",
-    "page": "Página {current} de {total}.",
 
     "start": "<b>Olá!</b> Eu sou um bot que pode te ajudar a <details>coletar</details> waifus ou husbandos de <u>vários</u> animes.\n\nPara começar, digite /help",
 
-    "help": "Aqui está uma lista de comandos que você pode usar:\n\n<b>/start</b> - Inicia o bot\n<b>/help</b> - Exibe uma lista de comandos\n<b>/language</b> - Altera o idioma usado para exibir mensagens\n\n<b>/collect</b> - Coleta uma waifu/husbando\n<b>/list</b> - Lista todas as waifus/husbandos que você coletou\n<b>/delete</b> - Deleta uma waifu/husbando",
+    "help": "Aqui está uma lista de comandos que você pode usar:\n\n<b>/start</b> - Inicia o bot\n<b>/help</b> - Exibe uma lista de comandos\n<b>/language</b> - Altera o idioma usado para exibir mensagens\n\n<b>/list</b> - Lista todas as waifus/husbandos que você coletou\n<b>/delete</b> - Deleta uma waifu/husbando",
 
     "language": "Selecione o idioma que você deseja usar para exibir mensagens:",
     "language_set": "O idioma foi alterado para {new_lang}",
 
-    "new_character": "Um personagem misterioso apareceu...!\n\nResponda a essa mensagem com o nome do personagem para coletá-lo.",
-    "no_characters": "Você ainda não coletou nenhum personagem.",
-    "has_character": "Você já coletou esse personagem.",
-    "max_characters": "Você atingiu o número máximo de personagens que pode coletar.",
-    "not_a_character": "Isso não é um personagem válido.",
-    "wrong_character": "Você errou o nome do personagem. Tente novamente.",
-    "expired_character": "Esse personagem expirou e não pode mais ser coletado.",
-    "character_collected": "Você coletou {name}!"
+    "new_character": "🎰 <b>Um personagem misterioso apareceu...!</b>\n\n🔥 — Responda a essa mensagem com o nome do personagem para coletá-lo.",
+    "no_characters": "Eita! Pelo que aparenta ser, você ainda não pegou nenhum personagem nesse grupo. Trate já de pegar algum para usar esta função. 🔙",
+    "has_character": "🤚 Você já possui esse personagem nesse grupo.",
+    "max_characters": "Você atingiu o número máximo de personagens que pode coletar. ⛔",
+    "not_a_character": "️Isso não é um personagem válido. ⁉️",
+    "wrong_character": "⚠️ — <b>Ops!</b> O nome do personagem não é este, tente novamente.",
+    "expired_character": "Esse personagem expirou e não pode mais ser coletado. (❌)",
+    "character_escaped": "Ops... O personagem <details>{name}</details> acabou fugindo! (❌)\n\n🔖 Lembre-se dele(a) e seja mais rápido na próxima vez!",
+    "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥"
 }

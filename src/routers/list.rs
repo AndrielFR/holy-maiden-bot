@@ -1,5 +1,6 @@
 use grammers_client::{Client, InputMedia, InputMessage, Update};
 use grammers_friendly::prelude::*;
+use rust_anilist::models::Gender;
 
 use crate::{
     database::models::{Character, User},
@@ -40,12 +41,31 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
                         .await
                         .ok()
                     {
-                        let caption = String::from("👩‍👦: {name}\n\n{stars}")
+                        let caption = String::from("{gender_emoji} <b>{name}</b>\n\n⭐: {stars}")
+                            .replace(
+                                "{gender_emoji}",
+                                match char_ani.gender.unwrap_or(Gender::NonBinary) {
+                                    Gender::Male => "💥",
+                                    Gender::Female => "🌸",
+                                    Gender::NonBinary | Gender::Other(_) => "🍃",
+                                },
+                            )
                             .replace(
                                 "{name}",
                                 &format!("<a href=\"{0}\">{1}</a>", char_ani.url, character.name),
                             )
-                            .replace("{stars}", &"⭐".repeat(character.stars as usize));
+                            .replace(
+                                "{stars}",
+                                match character.stars {
+                                    1 => "⚪",
+                                    2 => "🟢",
+                                    3 => "🔵",
+                                    4 => "🟣",
+                                    5 => "🔴",
+                                    _ => "🟡",
+                                },
+                            );
+
                         medias.push(InputMedia::html(caption).photo_url(char_ani.image.large));
                     }
                 }

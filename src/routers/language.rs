@@ -33,7 +33,7 @@ async fn language(_client: &mut Client, update: &mut Update, data: &mut Data) ->
                 format!(
                     "{} {}",
                     i18n.get_from_locale(locale, "language_name"),
-                    if *locale == i18n.locale() { "✅" } else { "" }
+                    if *locale == i18n.locale() { "✔" } else { "" }
                 ),
                 format!("set_language {}", locale),
             )

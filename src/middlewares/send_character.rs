@@ -72,6 +72,37 @@ impl MiddlewareImpl for SendCharacter {
                     let conn = db.get_conn();
 
                     if let Some(mut group) = Group::select_by_id(conn, group_id).await? {
+                        if let Some(last_message_id) = group.last_character_message_id {
+                            // Check if the character is left behind without anyone collecting it
+                            if (message.id() - last_message_id) >= 35 {
+                                if let Some(character) =
+                                    Character::select_by_id(conn, group.last_character_id.unwrap())
+                                        .await?
+                                {
+                                    // Reset message count
+                                    *num_messages = 0;
+
+                                    // Update group last character
+                                    group.last_character_id = Some(0);
+                                    group.last_character_message_id = Some(0);
+                                    Group::update_by_id(conn, &group, group.id).await?;
+
+                                    // Send the reply message
+                                    message
+                                        .respond(
+                                            InputMessage::html(
+                                                t("character_escaped")
+                                                    .replace("{name}", &character.name),
+                                            )
+                                            .reply_to(Some(last_message_id)),
+                                        )
+                                        .await?;
+
+                                    return Ok(());
+                                }
+                            }
+                        }
+
                         if let Some(random_character) = Character::random(conn).await? {
                             if let Some(character) = match self
                                 .characters
@@ -99,6 +130,7 @@ impl MiddlewareImpl for SendCharacter {
                                 let response = message
                                     .respond(
                                         InputMessage::html(t("new_character"))
+                                            .media_ttl(200)
                                             .photo_url(&character.image.large),
                                     )
                                     .await?;
