@@ -4,7 +4,7 @@ use rust_anilist::models::Gender;
 
 use crate::{
     database::models::{Character, User},
-    modules::{Database, I18n},
+    modules::{Anilist, Database, I18n},
     Result,
 };
 
@@ -15,6 +15,7 @@ pub fn router() -> Router {
 async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
+    let mut ani = data.get_module::<Anilist>().unwrap();
 
     let t = |key| i18n.get(key);
 
@@ -32,19 +33,15 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
         } else {
             let mut medias = Vec::new();
 
-            let ani_client = rust_anilist::Client::default();
-
             for owned_character_id in owned_characters {
-                if let Some(character) = Character::select_by_id(conn, owned_character_id).await? {
-                    if let Some(char_ani) = ani_client
-                        .get_char(serde_json::json!({"id": owned_character_id}))
-                        .await
-                        .ok()
+                if let Some(character) = ani.get_char(owned_character_id).await {
+                    if let Some(owned_character) =
+                        Character::select_by_id(conn, owned_character_id).await?
                     {
                         let caption = String::from("{gender_emoji} <b>{name}</b>\n\n⭐: {stars}")
                             .replace(
                                 "{gender_emoji}",
-                                match char_ani.gender.unwrap_or(Gender::NonBinary) {
+                                match character.gender.unwrap_or(Gender::NonBinary) {
                                     Gender::Male => "💥",
                                     Gender::Female => "🌸",
                                     Gender::NonBinary | Gender::Other(_) => "🍃",
@@ -52,11 +49,14 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
                             )
                             .replace(
                                 "{name}",
-                                &format!("<a href=\"{0}\">{1}</a>", char_ani.url, character.name),
+                                &format!(
+                                    "<a href=\"{0}\">{1}</a>",
+                                    character.url, owned_character.name
+                                ),
                             )
                             .replace(
                                 "{stars}",
-                                match character.stars {
+                                match owned_character.stars {
                                     1 => "⚪",
                                     2 => "🟢",
                                     3 => "🔵",
@@ -66,7 +66,7 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
                                 },
                             );
 
-                        medias.push(InputMedia::html(caption).photo_url(char_ani.image.large));
+                        medias.push(InputMedia::html(caption).photo_url(character.image.large));
                     }
                 }
             }

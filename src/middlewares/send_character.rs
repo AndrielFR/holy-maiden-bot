@@ -1,7 +1,4 @@
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    ops::Range,
-};
+use std::{collections::HashMap, ops::Range};
 
 use async_trait::async_trait;
 use grammers_client::{types::Chat, Client, InputMessage, Update};
@@ -10,19 +7,16 @@ use rand::{thread_rng, Rng};
 
 use crate::{
     database::models::{Character, Group},
-    modules::{Database, I18n},
+    modules::{Anilist, Database, I18n},
     Result,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct SendCharacter {
     min_messages: i64,
     max_messages: i64,
 
     chats: HashMap<i64, (i64, i64)>,
-    characters: HashMap<i64, rust_anilist::models::Character>,
-
-    ani_client: rust_anilist::Client,
 }
 
 impl SendCharacter {
@@ -31,10 +25,7 @@ impl SendCharacter {
             min_messages: range.start,
             max_messages: range.end,
 
-            chats: HashMap::new(),
-            characters: HashMap::new(),
-
-            ani_client: rust_anilist::Client::default(),
+            ..Default::default()
         }
     }
 }
@@ -49,6 +40,7 @@ impl MiddlewareImpl for SendCharacter {
     ) -> Result<()> {
         let mut db = data.get_module::<Database>().unwrap();
         let i18n = data.get_module::<I18n>().unwrap();
+        let mut ani = data.get_module::<Anilist>().unwrap();
 
         let t = |key| i18n.get(key);
 
@@ -104,23 +96,7 @@ impl MiddlewareImpl for SendCharacter {
                         }
 
                         if let Some(random_character) = Character::random(conn).await? {
-                            if let Some(character) = match self
-                                .characters
-                                .entry(random_character.id)
-                            {
-                                Entry::Occupied(entry) => Some(entry.into_mut()),
-                                Entry::Vacant(entry) => {
-                                    if let Ok(character) = self
-                                        .ani_client
-                                        .get_char(serde_json::json!({"id": random_character.id}))
-                                        .await
-                                    {
-                                        Some(entry.insert(character))
-                                    } else {
-                                        None
-                                    }
-                                }
-                            } {
+                            if let Some(character) = ani.get_char(random_character.id).await {
                                 // If the character is the last one, skip it
                                 if group.last_character_id == Some(character.id) {
                                     return Ok(());
