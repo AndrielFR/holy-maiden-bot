@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use grammers_client::types::Chat;
+use grammers_client::{session::PackedChat, types::Chat};
 use grammers_friendly::prelude::*;
-use grammers_session::PackedChat;
 use rbatis::RBatis;
 use rbdc_sqlite::Driver;
 

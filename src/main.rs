@@ -1,6 +1,5 @@
-use grammers_client::{Client, Config, InitParams};
+use grammers_client::{session::Session, Client, Config, InitParams};
 use grammers_friendly::prelude::*;
-use grammers_session::Session;
 use holy_maiden_bot::{
     middlewares::{SaveChat, SetLocale},
     modules::{Anilist, Database, I18n},
