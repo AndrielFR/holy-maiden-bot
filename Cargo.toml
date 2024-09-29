@@ -12,17 +12,18 @@ grammers-session = { git = "https://github.com/Lonami/grammers" }
 # rust-anilist = { git = "https://github.com/AndrielFR/rust-anilist" }
 rust-anilist = { path = "../rust-anilist" }
 
-rbs = "4.5.18"
+rbs = "4.5.20"
 log = "0.4.22"
 rand = "0.8.5"
 toml = "0.8.19"
 tokio = { version = "1.40.0", features = [ "macros", "sync", "signal" ] }
-serde = { version = "1.0.209", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 rbatis = "4.5.30"
 dotenvy = "0.15.7"
+reqwest = "0.12.7"
 env_logger = "0.11.5"
 serde_json = "1.0.128"
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 rbdc-sqlite = "4.5.5"
 
 [profile.release]

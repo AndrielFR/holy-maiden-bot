@@ -1,7 +1,11 @@
 use std::{collections::HashMap, ops::Range};
 
 use async_trait::async_trait;
-use grammers_client::{types::Chat, Client, InputMessage, Update};
+use grammers_client::{
+    grammers_tl_types::{self as tl, Deserializable},
+    types::{media::Uploaded, Chat},
+    Client, InputMessage, Update,
+};
 use grammers_friendly::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -34,7 +38,7 @@ impl SendCharacter {
 impl MiddlewareImpl for SendCharacter {
     async fn call(
         &mut self,
-        _client: &mut Client,
+        client: &mut Client,
         update: &mut Update,
         data: &mut Data,
     ) -> Result<()> {
@@ -101,13 +105,19 @@ impl MiddlewareImpl for SendCharacter {
                                 if group.last_character_id == Some(character.id) {
                                     return Ok(());
                                 }
+                                let file = match random_character.image {
+                                    Some(bytes) => Uploaded::from_raw(
+                                        tl::enums::InputFile::from_bytes(&bytes)?,
+                                    ),
+                                    None => ani.get_image(client, random_character.id).await?,
+                                };
 
                                 // Send the character
                                 let response = message
                                     .respond(
                                         InputMessage::html(t("new_character"))
                                             .media_ttl(200)
-                                            .photo_url(&character.image.large),
+                                            .photo(file),
                                     )
                                     .await?;
 

@@ -1,4 +1,8 @@
-use grammers_client::{Client, InputMedia, InputMessage, Update};
+use grammers_client::{
+    grammers_tl_types::{self as tl, Deserializable, Serializable},
+    types::media::Uploaded,
+    Client, InputMedia, InputMessage, Update,
+};
 use grammers_friendly::prelude::*;
 use rust_anilist::models::Gender;
 
@@ -12,7 +16,7 @@ pub fn router() -> Router {
     Router::default().add_handler(Handler::new_message(list, macros::command!("list")))
 }
 
-async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
     let mut ani = data.get_module::<Anilist>().unwrap();
@@ -35,7 +39,7 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
 
             for owned_character_id in owned_characters {
                 if let Some(character) = ani.get_char(owned_character_id).await {
-                    if let Some(owned_character) =
+                    if let Some(mut owned_character) =
                         Character::select_by_id(conn, owned_character_id).await?
                     {
                         let caption = String::from("{gender_emoji} <b>{name}</b>\n\n⭐: {stars}")
@@ -66,7 +70,22 @@ async fn list(_client: &mut Client, update: &mut Update, data: &mut Data) -> Res
                                 },
                             );
 
-                        medias.push(InputMedia::html(caption).photo_url(character.image.large));
+                        let file = match owned_character.image {
+                            Some(bytes) => {
+                                Uploaded::from_raw(tl::enums::InputFile::from_bytes(&bytes)?)
+                            }
+                            None => {
+                                let file = ani.get_image(client, owned_character_id).await?;
+                                // Update character image's bytes
+                                owned_character.image = Some(file.raw.to_bytes());
+                                Character::update_by_id(conn, &owned_character, owned_character_id)
+                                    .await?;
+
+                                file
+                            }
+                        };
+
+                        medias.push(InputMedia::html(caption).photo(file));
                     }
                 }
             }

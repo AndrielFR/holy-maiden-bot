@@ -37,6 +37,7 @@ pub struct Character {
     pub id: i64,
     pub name: String,
     pub stars: u8,
+    pub image: Option<Vec<u8>>,
 
     pub available: i32,
 }

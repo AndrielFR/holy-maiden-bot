@@ -3,21 +3,25 @@ use std::{
     sync::Arc,
 };
 
+use grammers_client::{types::media::Uploaded, Client};
 use grammers_friendly::prelude::*;
-use rust_anilist::{models::Character, Client};
-use tokio::sync::Mutex;
+use rust_anilist::models::Character;
+use tokio::{io::AsyncWriteExt, sync::Mutex};
+
+use crate::Result;
 
 #[derive(Clone, Default)]
 pub struct Anilist {
-    client: Client,
+    client: rust_anilist::Client,
 
-    pub characters: Arc<Mutex<HashMap<i64, Character>>>,
+    images: Arc<Mutex<HashMap<i64, Uploaded>>>,
+    characters: Arc<Mutex<HashMap<i64, Character>>>,
 }
 
 impl Anilist {
     pub fn new() -> Self {
         Self {
-            client: Client::default().timeout(80),
+            client: rust_anilist::Client::default().timeout(80),
             ..Default::default()
         }
     }
@@ -32,11 +36,43 @@ impl Anilist {
         match characters.entry(id) {
             Entry::Occupied(e) => Some(e.get().clone()),
             Entry::Vacant(e) => {
-                if let Ok(char) = self.client.get_char(serde_json::json!({"id": id})).await {
-                    e.insert(char.clone());
-                    Some(char)
+                if let Ok(character) = self.client.get_char(serde_json::json!({"id": id})).await {
+                    e.insert(character.clone());
+
+                    Some(character)
                 } else {
                     None
+                }
+            }
+        }
+    }
+
+    pub async fn get_image(&mut self, client: &mut Client, id: i64) -> Result<Uploaded> {
+        let characters = self.characters.lock().await;
+        let mut images = self.images.lock().await;
+
+        match images.entry(id) {
+            Entry::Occupied(e) => Ok(e.get().clone()),
+            Entry::Vacant(e) => {
+                if let Some(character) = characters.get(&id) {
+                    let file_path = format!(
+                        "{}/char_{}.jpg",
+                        std::env::current_dir()?.to_str().unwrap(),
+                        character.id
+                    );
+
+                    let response = reqwest::get(&character.image.large).await?;
+                    let mut file = tokio::fs::File::create(&file_path).await?;
+                    let content = response.bytes().await?;
+                    file.write_all(&content).await?;
+
+                    let file = client.upload_file(&file_path).await?;
+                    e.insert(file.clone());
+                    tokio::fs::remove_file(file_path).await?;
+
+                    Ok(file)
+                } else {
+                    Err("Character not found".into())
                 }
             }
         }
