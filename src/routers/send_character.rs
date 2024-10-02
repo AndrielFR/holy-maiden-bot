@@ -5,7 +5,7 @@ use crate::{middlewares::SendCharacter, Result};
 
 pub fn router() -> Router {
     Router::default()
-        .add_middleware(Middleware::before(SendCharacter::new(3..4))) // TEMP: Tests porpuse
+        .add_middleware(Middleware::before(SendCharacter::new(40..60)))
         .add_handler(Handler::new_message(mock, filters::private().not()))
 }
 
