@@ -44,9 +44,12 @@ async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> 
                                 .to_lowercase()
                                 .split_whitespace()
                                 .find_map(|guess| {
-                                    for part in character.name.to_lowercase().split_whitespace() {
-                                        if guess == part {
-                                            return Some(true);
+                                    if guess.len() > 2 {
+                                        for part in character.name.to_lowercase().split_whitespace()
+                                        {
+                                            if guess == part {
+                                                return Some(true);
+                                            }
                                         }
                                     }
 
