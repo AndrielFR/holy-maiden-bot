@@ -71,34 +71,37 @@ impl MiddlewareImpl for SendCharacter {
                         GroupCharacter::select_last_by_id(conn, group_id).await?;
 
                     if let Some(ref group_character) = last_group_character {
-                        // Check if the character is left behind without anyone collecting it
-                        if (message.id() - group_character.last_message_id) >= 35 {
-                            if let Some(character) =
-                                Character::select_by_id(conn, group_character.character_id).await?
-                            {
-                                // Reset message count
-                                *num_messages = 0;
+                        if group_character.available {
+                            // Check if the character is left behind without anyone collecting it
+                            if (message.id() - group_character.last_message_id) >= 35 {
+                                if let Some(character) =
+                                    Character::select_by_id(conn, group_character.character_id)
+                                        .await?
+                                {
+                                    // Reset message count
+                                    *num_messages = 0;
 
-                                // Delete group last character
-                                GroupCharacter::delete_by_id(
-                                    conn,
-                                    group_character.group_id,
-                                    group_character.character_id,
-                                )
-                                .await?;
-
-                                // Send the reply message
-                                message
-                                    .respond(
-                                        InputMessage::html(
-                                            t("character_escaped")
-                                                .replace("{name}", &character.name),
-                                        )
-                                        .reply_to(Some(group_character.last_message_id)),
+                                    // Delete group last character
+                                    GroupCharacter::delete_by_id(
+                                        conn,
+                                        group_character.group_id,
+                                        group_character.character_id,
                                     )
                                     .await?;
 
-                                return Ok(());
+                                    // Send the reply message
+                                    message
+                                        .respond(
+                                            InputMessage::html(
+                                                t("character_escaped")
+                                                    .replace("{name}", &character.name),
+                                            )
+                                            .reply_to(Some(group_character.last_message_id)),
+                                        )
+                                        .await?;
+
+                                    return Ok(());
+                                }
                             }
                         }
                     }
