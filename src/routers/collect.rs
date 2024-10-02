@@ -39,18 +39,20 @@ async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> 
                         if let Some(mut character) =
                             Character::select_by_id(conn, group.last_character_id.unwrap()).await?
                         {
-                            let splitted = message.text().to_lowercase();
-
-                            if character
-                                .name
+                            if message
+                                .text()
                                 .to_lowercase()
                                 .split_whitespace()
-                                .find_map(|part| {
-                                    splitted
-                                        .split_whitespace()
-                                        .find_map(|word| Some(part == word))
+                                .find_map(|guess| {
+                                    for part in character.name.to_lowercase().split_whitespace() {
+                                        if guess == part {
+                                            return Some(true);
+                                        }
+                                    }
+
+                                    None
                                 })
-                                .unwrap()
+                                .is_some()
                             {
                                 // Check if character is available
                                 if character.available == 1 {
