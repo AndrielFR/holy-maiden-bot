@@ -10,7 +10,7 @@
     "language_set": "O idioma foi alterado para {new_lang}",
 
     "new_character": "🎰 <b>Um personagem misterioso apareceu...!</b>\n\n🔥 — Responda a essa mensagem com o nome do personagem para coletá-lo.",
-    "no_characters": "Eita! Pelo que aparenta ser, você ainda não pegou nenhum personagem nesse grupo. Trate já de pegar algum para usar esta função. 🔙",
+    "no_characters": "Eita! Você ainda não pegou nenhum personagem nesse grupo. Trate já de pegar algum para usar esta função. 🔙",
     "has_character": "🤚 Você já possui esse personagem nesse grupo.",
     "max_characters": "Você atingiu o número máximo de personagens que pode coletar. ⛔",
     "not_a_character": "️Isso não é um personagem válido. ⁉️",

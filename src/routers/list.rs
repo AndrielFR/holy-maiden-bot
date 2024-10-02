@@ -39,33 +39,30 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
                 if let Some(ani_character) = ani.get_char(character_id).await {
                     if let Some(mut character) = Character::select_by_id(conn, character_id).await?
                     {
-                        let caption = String::from("{gender_emoji} <b>{name}</b>\n\n⭐: {stars}")
-                            .replace(
-                                "{gender_emoji}",
-                                match ani_character.gender.unwrap_or(Gender::NonBinary) {
-                                    Gender::Male => "💥",
-                                    Gender::Female => "🌸",
-                                    Gender::NonBinary | Gender::Other(_) => "🍃",
-                                },
-                            )
-                            .replace(
-                                "{name}",
-                                &format!(
-                                    "<a href=\"{0}\">{1}</a>",
-                                    ani_character.url, character.name
-                                ),
-                            )
-                            .replace(
-                                "{stars}",
-                                match character.stars {
-                                    1 => "⚪",
-                                    2 => "🟢",
-                                    3 => "🔵",
-                                    4 => "🟣",
-                                    5 => "🔴",
-                                    _ => "🟡",
-                                },
-                            );
+                        let caption = String::from(
+                            "{gender_emoji} <code>{id}</code>. <b>{name}</b>\n\n⭐: {stars}",
+                        )
+                        .replace("{id}", &ani_character.id.to_string())
+                        .replace(
+                            "{gender_emoji}",
+                            match ani_character.gender.unwrap_or(Gender::NonBinary) {
+                                Gender::Male => "💥",
+                                Gender::Female => "🌸",
+                                Gender::NonBinary | Gender::Other(_) => "🍃",
+                            },
+                        )
+                        .replace("{name}", &character.name)
+                        .replace(
+                            "{stars}",
+                            match character.stars {
+                                1 => "⚪",
+                                2 => "🟢",
+                                3 => "🔵",
+                                4 => "🟣",
+                                5 => "🔴",
+                                _ => "🟡",
+                            },
+                        );
 
                         let file = match character.image {
                             Some(bytes) => {
