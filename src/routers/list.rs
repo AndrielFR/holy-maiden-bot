@@ -1,13 +1,13 @@
 use grammers_client::{
     grammers_tl_types::{self as tl, Deserializable, Serializable},
-    types::media::Uploaded,
+    types::{media::Uploaded, Chat},
     Client, InputMedia, InputMessage, Update,
 };
 use grammers_friendly::prelude::*;
 use rust_anilist::models::Gender;
 
 use crate::{
-    database::models::{Character, User},
+    database::models::{Character, UserCharacters},
     modules::{Anilist, Database, I18n},
     Result,
 };
@@ -23,29 +23,26 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
 
     let t = |key| i18n.get(key);
 
+    let chat = update.get_chat().unwrap();
     let message = update.get_message().unwrap();
-
-    let conn = db.get_conn();
-
     let sender = update.get_sender().unwrap();
-    if let Some(user) = User::select_by_id(conn, sender.id()).await? {
-        let owned_characters = user.owned_characters.unwrap_or_else(Vec::new);
-        if owned_characters.is_empty() {
-            message
-                .reply(InputMessage::html(t("no_characters")))
-                .await?;
-        } else {
+
+    if let Chat::Group(group) = chat {
+        let conn = db.get_conn();
+
+        if let Some(user_characters) =
+            UserCharacters::select_by_id(conn, sender.id(), group.id()).await?
+        {
             let mut medias = Vec::new();
 
-            for owned_character_id in owned_characters {
-                if let Some(character) = ani.get_char(owned_character_id).await {
-                    if let Some(mut owned_character) =
-                        Character::select_by_id(conn, owned_character_id).await?
+            for character_id in user_characters.characters_id {
+                if let Some(ani_character) = ani.get_char(character_id).await {
+                    if let Some(mut character) = Character::select_by_id(conn, character_id).await?
                     {
                         let caption = String::from("{gender_emoji} <b>{name}</b>\n\n⭐: {stars}")
                             .replace(
                                 "{gender_emoji}",
-                                match character.gender.unwrap_or(Gender::NonBinary) {
+                                match ani_character.gender.unwrap_or(Gender::NonBinary) {
                                     Gender::Male => "💥",
                                     Gender::Female => "🌸",
                                     Gender::NonBinary | Gender::Other(_) => "🍃",
@@ -55,12 +52,12 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
                                 "{name}",
                                 &format!(
                                     "<a href=\"{0}\">{1}</a>",
-                                    character.url, owned_character.name
+                                    ani_character.url, character.name
                                 ),
                             )
                             .replace(
                                 "{stars}",
-                                match owned_character.stars {
+                                match character.stars {
                                     1 => "⚪",
                                     2 => "🟢",
                                     3 => "🔵",
@@ -70,16 +67,15 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
                                 },
                             );
 
-                        let file = match owned_character.image {
+                        let file = match character.image {
                             Some(bytes) => {
                                 Uploaded::from_raw(tl::enums::InputFile::from_bytes(&bytes)?)
                             }
                             None => {
-                                let file = ani.get_image(client, owned_character_id).await?;
+                                let file = ani.get_image(client, character_id).await?;
                                 // Update character image's bytes
-                                owned_character.image = Some(file.raw.to_bytes());
-                                Character::update_by_id(conn, &owned_character, owned_character_id)
-                                    .await?;
+                                character.image = Some(file.raw.to_bytes());
+                                Character::update_by_id(conn, &character, character_id).await?;
 
                                 file
                             }
@@ -91,7 +87,13 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
             }
 
             message.reply_album(medias).await?;
+        } else {
+            message
+                .reply(InputMessage::html(t("no_characters")))
+                .await?;
         }
+    } else {
+        message.reply(InputMessage::html(t("not_a_group"))).await?;
     }
 
     return Ok(());

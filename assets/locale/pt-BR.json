@@ -1,5 +1,6 @@
 {
     "language_name": "Português (BR)",
+    "not_a_group": "Este comando só pode ser usado em grupos.",
 
     "start": "<b>Olá!</b> Eu sou um bot que pode te ajudar a <details>coletar</details> waifus ou husbandos de <u>vários</u> animes.\n\nPara começar, digite /help",
 

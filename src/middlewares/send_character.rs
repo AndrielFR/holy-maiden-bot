@@ -2,7 +2,7 @@ use std::{collections::HashMap, ops::Range};
 
 use async_trait::async_trait;
 use grammers_client::{
-    grammers_tl_types::{self as tl, Deserializable},
+    grammers_tl_types::{self as tl, Deserializable, Serializable},
     types::{media::Uploaded, Chat},
     Client, InputMessage, Update,
 };
@@ -10,7 +10,7 @@ use grammers_friendly::prelude::*;
 use rand::{thread_rng, Rng};
 
 use crate::{
-    database::models::{Character, Group},
+    database::models::{Character, GroupCharacter},
     modules::{Anilist, Database, I18n},
     Result,
 };
@@ -67,65 +67,81 @@ impl MiddlewareImpl for SendCharacter {
 
                     let conn = db.get_conn();
 
-                    if let Some(mut group) = Group::select_by_id(conn, group_id).await? {
-                        if let Some(last_message_id) = group.last_character_message_id {
-                            // Check if the character is left behind without anyone collecting it
-                            if (message.id() - last_message_id) >= 35 {
-                                if let Some(character) =
-                                    Character::select_by_id(conn, group.last_character_id.unwrap())
-                                        .await?
-                                {
-                                    // Reset message count
-                                    *num_messages = 0;
+                    let last_group_character =
+                        GroupCharacter::select_last_by_id(conn, group_id).await?;
 
-                                    // Update group last character
-                                    group.last_character_id = Some(0);
-                                    group.last_character_message_id = Some(0);
-                                    Group::update_by_id(conn, &group, group.id).await?;
+                    if let Some(ref group_character) = last_group_character {
+                        // Check if the character is left behind without anyone collecting it
+                        if (message.id() - group_character.last_message_id) >= 35 {
+                            if let Some(character) =
+                                Character::select_by_id(conn, group_character.character_id).await?
+                            {
+                                // Reset message count
+                                *num_messages = 0;
 
-                                    // Send the reply message
-                                    message
-                                        .respond(
-                                            InputMessage::html(
-                                                t("character_escaped")
-                                                    .replace("{name}", &character.name),
-                                            )
-                                            .reply_to(Some(last_message_id)),
-                                        )
-                                        .await?;
+                                // Delete group last character
+                                GroupCharacter::delete_by_id(
+                                    conn,
+                                    group_character.group_id,
+                                    group_character.character_id,
+                                )
+                                .await?;
 
-                                    return Ok(());
-                                }
-                            }
-                        }
-
-                        if let Some(random_character) = Character::random(conn).await? {
-                            if let Some(character) = ani.get_char(random_character.id).await {
-                                // If the character is the last one, skip it
-                                if group.last_character_id == Some(character.id) {
-                                    return Ok(());
-                                }
-                                let file = match random_character.image {
-                                    Some(bytes) => Uploaded::from_raw(
-                                        tl::enums::InputFile::from_bytes(&bytes)?,
-                                    ),
-                                    None => ani.get_image(client, random_character.id).await?,
-                                };
-
-                                // Send the character
-                                let response = message
+                                // Send the reply message
+                                message
                                     .respond(
-                                        InputMessage::html(t("new_character"))
-                                            .media_ttl(200)
-                                            .photo(file),
+                                        InputMessage::html(
+                                            t("character_escaped")
+                                                .replace("{name}", &character.name),
+                                        )
+                                        .reply_to(Some(group_character.last_message_id)),
                                     )
                                     .await?;
 
-                                // Update group last character
-                                group.last_character_id = Some(character.id);
-                                group.last_character_message_id = Some(response.id());
-                                Group::update_by_id(conn, &group, group.id).await?;
+                                return Ok(());
                             }
+                        }
+                    }
+
+                    if let Some(mut random_character) = Character::select_random(conn).await? {
+                        if let Some(character) = ani.get_char(random_character.id).await {
+                            // If the character is the last one, skip it
+                            if let Some(group_character) = last_group_character {
+                                if character.id == group_character.character_id {
+                                    return Ok(());
+                                }
+                            }
+
+                            let file = match random_character.image {
+                                Some(bytes) => {
+                                    Uploaded::from_raw(tl::enums::InputFile::from_bytes(&bytes)?)
+                                }
+                                None => ani.get_image(client, random_character.id).await?,
+                            };
+
+                            // Update character's image
+                            random_character.image = Some(file.raw.to_bytes());
+                            Character::update_by_id(conn, &random_character, random_character.id)
+                                .await?;
+
+                            // Send the character
+                            let response = message
+                                .respond(
+                                    InputMessage::html(t("new_character"))
+                                        .media_ttl(200)
+                                        .photo(file),
+                                )
+                                .await?;
+
+                            // Update group last character
+                            let group_character = GroupCharacter {
+                                group_id,
+                                character_id: character.id,
+                                last_message_id: response.id(),
+
+                                available: true,
+                            };
+                            GroupCharacter::insert(conn, &group_character).await?;
                         }
                     }
                 }

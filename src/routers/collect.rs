@@ -5,7 +5,7 @@ use grammers_client::{
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::{Character, Group, User},
+    database::models::{Character, GroupCharacter, UserCharacters},
     modules::{Database, I18n},
     Result,
 };
@@ -27,86 +27,91 @@ async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> 
     let message = update.get_message().unwrap();
 
     if let Chat::Group(group) = chat {
+        let group_id = group.id();
+
         if let Ok(Some(reply_message)) = message.get_reply().await {
             let conn = db.get_conn();
 
-            if let Some(mut group) = Group::select_by_id(conn, group.id()).await? {
-                if let Some(last_message_id) = group.last_character_message_id {
-                    // Check if the character match is the same as the user's reply
-                    if last_message_id == reply_message.id() {
-                        let mut text = t("not_a_character");
+            if let Some(mut group_character) =
+                GroupCharacter::select_last_by_id(conn, group_id).await?
+            {
+                // Check if the character match is the same as the user's reply
+                if group_character.last_message_id == reply_message.id() {
+                    let mut text = t("not_a_character");
 
-                        if let Some(mut character) =
-                            Character::select_by_id(conn, group.last_character_id.unwrap()).await?
+                    if let Some(character) =
+                        Character::select_by_id(conn, group_character.character_id).await?
+                    {
+                        if message
+                            .text()
+                            .to_lowercase()
+                            .split_whitespace()
+                            .find_map(|guess| {
+                                if guess.len() > 2 {
+                                    for part in character.name.to_lowercase().split_whitespace() {
+                                        if guess == part {
+                                            return Some(true);
+                                        }
+                                    }
+                                }
+
+                                None
+                            })
+                            .is_some()
                         {
-                            if message
-                                .text()
-                                .to_lowercase()
-                                .split_whitespace()
-                                .find_map(|guess| {
-                                    if guess.len() > 2 {
-                                        for part in character.name.to_lowercase().split_whitespace()
-                                        {
-                                            if guess == part {
-                                                return Some(true);
-                                            }
+                            // Check if character is available
+                            if group_character.available {
+                                let sender = message.sender().unwrap();
+                                let user_id = sender.id();
+
+                                if let Some(mut user_characters) =
+                                    UserCharacters::select_or_insert_by_id(conn, user_id, group_id)
+                                        .await?
+                                {
+                                    let mut characters = user_characters.characters_id;
+
+                                    if characters.len() == 9 {
+                                        text = t("max_characters");
+                                    } else if characters.contains(&character.id) {
+                                        text = t("has_character");
+                                    } else {
+                                        if !characters.contains(&character.id) {
+                                            text = t("character_collected")
+                                                .replace("{name}", &character.name);
+
+                                            // Add character to user's collection
+                                            characters.push(character.id);
+                                            user_characters.characters_id = characters;
+                                            UserCharacters::update_by_id(
+                                                conn,
+                                                &user_characters,
+                                                user_id,
+                                                group_id,
+                                            )
+                                            .await?;
+
+                                            // Update character availability
+                                            group_character.available = false;
+                                            GroupCharacter::update_by_id(
+                                                conn,
+                                                &group_character,
+                                                group_id,
+                                                group_character.character_id,
+                                            )
+                                            .await?;
                                         }
                                     }
-
-                                    None
-                                })
-                                .is_some()
-                            {
-                                // Check if character is available
-                                if character.available == 1 {
-                                    let sender = message.sender().unwrap();
-                                    if let Some(mut user) =
-                                        User::select_by_id(conn, sender.id()).await?
-                                    {
-                                        let mut owned_characters =
-                                            user.owned_characters.unwrap_or_else(Vec::new);
-
-                                        if owned_characters.len() == 9 {
-                                            text = t("max_characters");
-                                        } else if owned_characters.contains(&character.id) {
-                                            text = t("has_character");
-                                        } else {
-                                            if !owned_characters.contains(&character.id) {
-                                                text = t("character_collected")
-                                                    .replace("{name}", &character.name);
-
-                                                // Add character to user's collection
-                                                owned_characters.push(character.id);
-                                                user.owned_characters = Some(owned_characters);
-                                                User::update_by_id(conn, &user, user.id).await?;
-
-                                                // Update character availability
-                                                character.available = 0;
-                                                Character::update_by_id(
-                                                    conn,
-                                                    &character,
-                                                    character.id,
-                                                )
-                                                .await?;
-
-                                                // Update group last character
-                                                group.last_character_id = Some(0);
-                                                group.last_character_message_id = Some(0);
-                                                Group::update_by_id(conn, &group, group.id).await?;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    text = t("expired_character");
                                 }
                             } else {
-                                text = t("wrong_character");
+                                text = t("expired_character");
                             }
+                        } else {
+                            text = t("wrong_character");
                         }
-
-                        // Send the reply message
-                        message.reply(InputMessage::html(text)).await?;
                     }
+
+                    // Send the reply message
+                    message.reply(InputMessage::html(text)).await?;
                 }
             }
         }

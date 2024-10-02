@@ -36,9 +36,6 @@ impl MiddlewareImpl for SaveChat {
                         title: group.title().to_string(),
                         username: group.username().map(String::from),
                         language_code: "en-GB".to_string(),
-
-                        last_character_id: None,
-                        last_character_message_id: None,
                     };
                     Group::insert(conn, &g).await?;
                 }
@@ -63,7 +60,6 @@ impl MiddlewareImpl for SaveChat {
                             })
                             .unwrap_or("en-GB")
                             .to_string(),
-                        owned_characters: None,
                     };
                     User::insert(conn, &u).await?;
                 }

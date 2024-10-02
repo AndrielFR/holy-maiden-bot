@@ -1,6 +1,6 @@
 {
     "language_name": "English (UK)",
-    "read_more": "Read more",
+    "not_a_group": "This command can only be used in groups.",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
 
