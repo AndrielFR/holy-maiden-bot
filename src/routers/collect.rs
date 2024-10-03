@@ -42,25 +42,26 @@ async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> 
                     if let Some(character) =
                         Character::select_by_id(conn, group_character.character_id).await?
                     {
-                        if message
-                            .text()
-                            .to_lowercase()
-                            .split_whitespace()
-                            .find_map(|guess| {
-                                if guess.len() > 2 {
-                                    for part in character.name.to_lowercase().split_whitespace() {
-                                        if guess == part {
-                                            return Some(true);
+                        // Check if character is available
+                        if group_character.available {
+                            if message
+                                .text()
+                                .to_lowercase()
+                                .split_whitespace()
+                                .find_map(|guess| {
+                                    if guess.len() > 2 {
+                                        for part in character.name.to_lowercase().split_whitespace()
+                                        {
+                                            if guess == part {
+                                                return Some(true);
+                                            }
                                         }
                                     }
-                                }
 
-                                None
-                            })
-                            .is_some()
-                        {
-                            // Check if character is available
-                            if group_character.available {
+                                    None
+                                })
+                                .is_some()
+                            {
                                 let sender = message.sender().unwrap();
                                 let user_id = sender.id();
 
@@ -103,10 +104,10 @@ async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> 
                                     }
                                 }
                             } else {
-                                text = t("expired_character");
+                                text = t("wrong_character");
                             }
                         } else {
-                            text = t("wrong_character");
+                            text = t("expired_character");
                         }
                     }
 
