@@ -1,3 +1,4 @@
+mod admin;
 mod collect;
 mod help;
 mod language;
@@ -5,6 +6,7 @@ mod list;
 mod send_character;
 mod start;
 
+pub use admin::router as admin;
 pub use collect::router as collect;
 pub use help::router as help;
 pub use language::router as language;

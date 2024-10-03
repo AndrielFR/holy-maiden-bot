@@ -12,12 +12,16 @@ use crate::{
 
 pub fn router() -> Router {
     Router::default().add_handler(Handler::new_message(
-        collect,
+        collect_character,
         filters::private().not().and(filters::reply()),
     ))
 }
 
-async fn collect(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn collect_character(
+    _client: &mut Client,
+    update: &mut Update,
+    data: &mut Data,
+) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
 

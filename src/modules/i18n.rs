@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs,
     sync::{Arc, Mutex},
 };
@@ -35,14 +36,18 @@ impl<'a> Drop for LocaleGuard<'a> {
 #[derive(Clone)]
 pub struct I18n {
     locale: Arc<Mutex<String>>,
-    locales: Vec<(String, Value)>,
+    locales: HashMap<String, Value>,
+
+    default_locale: String,
 }
 
 impl I18n {
     pub fn new(locale: &str) -> Self {
         let mut i18n = Self {
             locale: Arc::new(Mutex::new(locale.to_string())),
-            locales: Vec::new(),
+            locales: HashMap::new(),
+
+            default_locale: locale.to_string(),
         };
         i18n.load_locales();
 
@@ -54,15 +59,23 @@ impl I18n {
     }
 
     pub fn get_from_locale(&self, locale: &str, key: &str) -> String {
-        let mut value = String::from("KEY_NOT_FOUND");
-
-        for (_, object) in self.locales.iter().filter(|(l, _)| l == locale) {
-            if let Some(v) = object.get(key) {
-                value = v.as_str().unwrap().to_string();
-                break;
+        if let Some(object) = self.locales.get(locale) {
+            match object.get(key) {
+                Some(v) => v.as_str().unwrap().to_string(),
+                None => {
+                    if let Some(object) = self.locales.get(&self.default_locale) {
+                        match object.get(key) {
+                            Some(v) => v.as_str().unwrap().to_string(),
+                            None => String::from("KEY_NOT_FOUND"),
+                        }
+                    } else {
+                        String::from("LANGUAGE_NOT_FOUND")
+                    }
+                }
             }
+        } else {
+            String::from("LANGUAGE_NOT_FOUND")
         }
-        value
     }
 
     pub fn locale(&self) -> String {
@@ -72,7 +85,8 @@ impl I18n {
 
     pub fn locales(&self) -> Vec<String> {
         self.locales
-            .iter()
+            .clone()
+            .into_iter()
             .map(|(locale, _)| locale.clone())
             .collect::<Vec<String>>()
     }
@@ -97,16 +111,16 @@ impl I18n {
             let path = format!("{}/{}.json", PATH, locale);
             let content = fs::read_to_string(&path).unwrap();
             let object: Value = serde_json::from_str(&content).unwrap();
-            self.locales.push((locale.to_string(), object));
+            self.locales.insert(locale.to_string(), object);
         }
     }
 
     pub fn set_locale(&self, locale: impl Into<String>) {
         let locale = locale.into();
 
-        if self.locales.iter().any(|(l, _)| *l == locale) {
+        if self.locales.get(&locale).is_some() {
             let mut curr_locale = self.locale.lock().unwrap();
-            *curr_locale = locale.to_string();
+            *curr_locale = locale;
         }
     }
 

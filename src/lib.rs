@@ -1,5 +1,6 @@
 mod config;
 pub mod database;
+pub mod filters;
 pub mod middlewares;
 pub mod modules;
 pub mod routers;

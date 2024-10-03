@@ -1,6 +1,11 @@
 {
     "language_name": "English (UK)",
+    "read_more": "Read more",
+
     "not_a_group": "This command can only be used in groups.",
+
+    "invalid_id": "The ID <code>{id}</code> is not valid. 🥶",
+    "invalid_command": "🤨 — Command used in the <b>wrong</b> way.\n\nTry: <code>{cmd}</code>",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
 
@@ -12,10 +17,12 @@
     "new_character": "🎰 <b>A mysterious character appears...!</b>\n\n🔥 — Reply to this message with the character's name to collect it.",
     "no_characters": "Oops! You haven't collected any characters yet in this group. Go get one to use this feature. 🔙",
     "has_character": "🤚 You already have this character in this group.",
+    "character_info": "{gender} <code>{id}</code>. <b>{name}</b>\n\n⭐: {bubble}",
     "max_characters": "You have reached the maximum number of characters you can collect. ⛔",
     "not_a_character": "This is not a valid character. ⁉️",
     "wrong_character": "⚠️ — <b>Oops!</b> The character's name isn't this, try again.",
-    "expired_character": "This character has expired and can no longer be collected. (❌)",
     "character_escaped": "Oops... the character <details>{name}</details> has escaped! (❌)\n\n🔖 Remember them and be faster next time!",
+    "expired_character": "This character has expired and can no longer be collected. (❌)",
+    "unknown_character": "🤔 — I couldn't find that character. Try again.",
     "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥"
 }

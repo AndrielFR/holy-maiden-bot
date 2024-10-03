@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Cursor, ops::Range};
+use std::{collections::HashMap, ops::Range};
 
 use async_trait::async_trait;
 use grammers_client::{types::Chat, Client, InputMessage, Update};
@@ -102,7 +102,7 @@ impl MiddlewareImpl for SendCharacter {
                         }
                     }
 
-                    if let Some(mut random_character) = Character::select_random(conn).await? {
+                    if let Some(random_character) = Character::select_random(conn).await? {
                         if let Some(character) = ani.get_char(random_character.id).await {
                             // If the character is the last one, skip it
                             if let Some(group_character) = last_group_character {
@@ -111,31 +111,13 @@ impl MiddlewareImpl for SendCharacter {
                                 }
                             }
 
-                            let bytes = random_character.image.unwrap_or({
-                                let bytes = ani.get_image(random_character.id).await?.to_vec();
-
-                                // Update character's image bytes
-                                random_character.image = Some(bytes.clone());
-                                Character::update_by_id(
-                                    conn,
-                                    &random_character,
-                                    random_character.id,
-                                )
-                                .await?;
-
-                                bytes
-                            });
-                            let mut stream = Cursor::new(&bytes);
-                            let file = client
-                                .upload_stream(
-                                    &mut stream,
-                                    bytes.len(),
-                                    format!(
-                                        "char_{}-{}.jpg",
-                                        random_character.id, random_character.name
-                                    ),
-                                )
-                                .await?;
+                            let file = crate::utils::upload_photo(
+                                client,
+                                random_character,
+                                &mut ani,
+                                conn,
+                            )
+                            .await?;
 
                             // Send the character
                             let response = message

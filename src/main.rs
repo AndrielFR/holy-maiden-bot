@@ -52,6 +52,7 @@ async fn main() -> Result<()> {
         .add_router(routers::language())
         .add_router(routers::collect())
         .add_router(routers::list())
+        .add_router(routers::admin())
         .add_router(routers::send_character())
         .ignore_updates_from_self(true)
         .run(client.clone())

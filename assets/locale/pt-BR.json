@@ -1,6 +1,11 @@
 {
     "language_name": "Português (BR)",
+    "read_more": "Leia mais",
+
     "not_a_group": "Este comando só pode ser usado em grupos.",
+
+    "invalid_id": "O ID <code>{id}</code> não é válido. 🥶",
+    "invalid_command": "🤨 — Comando utilizado da maneira <b>errada</b>.\n\nTente: <code>{cmd}</code>",
 
     "start": "<b>Olá!</b> Eu sou um bot que pode te ajudar a <details>coletar</details> waifus ou husbandos de <u>vários</u> animes.\n\nPara começar, digite /help",
 
@@ -15,7 +20,8 @@
     "max_characters": "Você atingiu o número máximo de personagens que pode coletar. ⛔",
     "not_a_character": "️Isso não é um personagem válido. ⁉️",
     "wrong_character": "⚠️ — <b>Ops!</b> O nome do personagem não é este, tente novamente.",
-    "expired_character": "Esse personagem expirou e não pode mais ser coletado. (❌)",
     "character_escaped": "Ops... O personagem <details>{name}</details> acabou fugindo! (❌)\n\n🔖 Lembre-se dele(a) e seja mais rápido na próxima vez!",
+    "expired_character": "Esse personagem expirou e não pode mais ser coletado. (❌)",
+    "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
     "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥"
 }
