@@ -2,6 +2,48 @@ use rbatis::{crud, impl_delete, impl_select, impl_update, RBatis};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Deserialize, Serialize)]
+pub struct Character {
+    pub id: i64,
+    pub name: String,
+    pub stars: u8,
+    pub image: Option<Vec<u8>>,
+}
+
+crud!(Character {}, "characters");
+impl_delete!(Character { delete_by_id(id: i64) => "`where id = #{id}`" }, "characters");
+impl_update!(Character { update_by_id(id: i64) => "`where id = #{id}`" }, "characters");
+impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
+impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
+
+#[derive(Deserialize, Serialize)]
+pub struct Group {
+    pub id: i64,
+    pub title: String,
+    pub username: Option<String>,
+    pub language_code: String,
+}
+
+crud!(Group {}, "groups");
+impl_update!(Group { update_by_id(id: i64) => "`where id = #{id}`" }, "groups");
+impl_select!(Group { select_by_id(id: i64) -> Option => "`where id = #{id}`" }, "groups");
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct GroupCharacter {
+    pub group_id: i64,
+    pub character_id: i64,
+    pub last_message_id: i32,
+
+    #[serde(deserialize_with = "bool_from_int", serialize_with = "bool_to_int")]
+    pub available: bool,
+}
+
+crud!(GroupCharacter {}, "group_characters");
+impl_delete!(GroupCharacter { delete_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
+impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
+impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "group_characters");
+impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "group_characters");
+
+#[derive(Deserialize, Serialize)]
 pub struct User {
     pub id: i64,
     pub username: Option<String>,
@@ -45,48 +87,6 @@ impl UserCharacters {
         }
     }
 }
-
-#[derive(Deserialize, Serialize)]
-pub struct Group {
-    pub id: i64,
-    pub title: String,
-    pub username: Option<String>,
-    pub language_code: String,
-}
-
-crud!(Group {}, "groups");
-impl_update!(Group { update_by_id(id: i64) => "`where id = #{id}`" }, "groups");
-impl_select!(Group { select_by_id(id: i64) -> Option => "`where id = #{id}`" }, "groups");
-
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct GroupCharacter {
-    pub group_id: i64,
-    pub character_id: i64,
-    pub last_message_id: i32,
-
-    #[serde(deserialize_with = "bool_from_int", serialize_with = "bool_to_int")]
-    pub available: bool,
-}
-
-crud!(GroupCharacter {}, "group_characters");
-impl_delete!(GroupCharacter { delete_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
-impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
-impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "group_characters");
-impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "group_characters");
-
-#[derive(Deserialize, Serialize)]
-pub struct Character {
-    pub id: i64,
-    pub name: String,
-    pub stars: u8,
-    pub image: Option<Vec<u8>>,
-}
-
-crud!(Character {}, "characters");
-impl_delete!(Character { delete_by_id(id: i64) => "`where id = #{id}`" }, "characters");
-impl_update!(Character { update_by_id(id: i64) => "`where id = #{id}`" }, "characters");
-impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
-impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
 
 fn bool_from_int<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
