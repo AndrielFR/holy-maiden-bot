@@ -1,8 +1,6 @@
-use grammers_client::{
-    grammers_tl_types::{self as tl, Deserializable, Serializable},
-    types::{media::Uploaded, Chat},
-    Client, InputMedia, InputMessage, Update,
-};
+use std::io::Cursor;
+
+use grammers_client::{types::Chat, Client, InputMedia, InputMessage, Update};
 use grammers_friendly::prelude::*;
 use rust_anilist::models::Gender;
 
@@ -64,19 +62,23 @@ async fn list(client: &mut Client, update: &mut Update, data: &mut Data) -> Resu
                             },
                         );
 
-                        let file = match character.image {
-                            Some(bytes) => {
-                                Uploaded::from_raw(tl::enums::InputFile::from_bytes(&bytes)?)
-                            }
-                            None => {
-                                let file = ani.get_image(client, character_id).await?;
-                                // Update character image's bytes
-                                character.image = Some(file.raw.to_bytes());
-                                Character::update_by_id(conn, &character, character_id).await?;
+                        let bytes = character.image.unwrap_or({
+                            let bytes = ani.get_image(character.id).await?.to_vec();
 
-                                file
-                            }
-                        };
+                            // Update character's image bytes
+                            character.image = Some(bytes.clone());
+                            Character::update_by_id(conn, &character, character.id).await?;
+
+                            bytes
+                        });
+                        let mut stream = Cursor::new(&bytes);
+                        let file = client
+                            .upload_stream(
+                                &mut stream,
+                                bytes.len(),
+                                format!("char_{}-{}.jpg", character.id, character.name),
+                            )
+                            .await?;
 
                         medias.push(InputMedia::html(caption).photo(file));
                     }

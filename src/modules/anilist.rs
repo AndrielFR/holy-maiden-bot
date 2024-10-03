@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use grammers_client::{types::media::Uploaded, Client};
+use bytes::Bytes;
 use grammers_friendly::prelude::*;
 use rust_anilist::models::Character;
 use tokio::{io::AsyncWriteExt, sync::Mutex};
@@ -14,7 +14,7 @@ use crate::Result;
 pub struct Anilist {
     client: rust_anilist::Client,
 
-    images: Arc<Mutex<HashMap<i64, Uploaded>>>,
+    images: Arc<Mutex<HashMap<i64, Bytes>>>,
     characters: Arc<Mutex<HashMap<i64, Character>>>,
 }
 
@@ -47,7 +47,7 @@ impl Anilist {
         }
     }
 
-    pub async fn get_image(&mut self, client: &mut Client, id: i64) -> Result<Uploaded> {
+    pub async fn get_image(&mut self, id: i64) -> Result<Bytes> {
         let characters = self.characters.lock().await;
         let mut images = self.images.lock().await;
 
@@ -56,7 +56,7 @@ impl Anilist {
             Entry::Vacant(e) => {
                 if let Some(character) = characters.get(&id) {
                     let file_path = format!(
-                        "{}/char_{}.jpg",
+                        "{}/assets/char_{}.jpg",
                         std::env::current_dir()?.to_str().unwrap(),
                         character.id
                     );
@@ -66,11 +66,10 @@ impl Anilist {
                     let content = response.bytes().await?;
                     file.write_all(&content).await?;
 
-                    let file = client.upload_file(&file_path).await?;
-                    e.insert(file.clone());
+                    e.insert(content.clone());
                     tokio::fs::remove_file(file_path).await?;
 
-                    Ok(file)
+                    Ok(content)
                 } else {
                     Err("Character not found".into())
                 }

@@ -1,11 +1,7 @@
-use std::{collections::HashMap, ops::Range};
+use std::{collections::HashMap, io::Cursor, ops::Range};
 
 use async_trait::async_trait;
-use grammers_client::{
-    grammers_tl_types::{self as tl, Deserializable, Serializable},
-    types::{media::Uploaded, Chat},
-    Client, InputMessage, Update,
-};
+use grammers_client::{types::Chat, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -115,16 +111,30 @@ impl MiddlewareImpl for SendCharacter {
                                 }
                             }
 
-                            let file = match random_character.image {
-                                Some(bytes) => {
-                                    Uploaded::from_raw(tl::enums::InputFile::from_bytes(&bytes)?)
-                                }
-                                None => ani.get_image(client, random_character.id).await?,
-                            };
+                            let bytes = random_character.image.unwrap_or({
+                                let bytes = ani.get_image(random_character.id).await?.to_vec();
 
-                            // Update character's image
-                            random_character.image = Some(file.raw.to_bytes());
-                            Character::update_by_id(conn, &random_character, random_character.id)
+                                // Update character's image bytes
+                                random_character.image = Some(bytes.clone());
+                                Character::update_by_id(
+                                    conn,
+                                    &random_character,
+                                    random_character.id,
+                                )
+                                .await?;
+
+                                bytes
+                            });
+                            let mut stream = Cursor::new(&bytes);
+                            let file = client
+                                .upload_stream(
+                                    &mut stream,
+                                    bytes.len(),
+                                    format!(
+                                        "char_{}-{}.jpg",
+                                        random_character.id, random_character.name
+                                    ),
+                                )
                                 .await?;
 
                             // Send the character
