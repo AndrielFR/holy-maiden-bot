@@ -278,9 +278,9 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                 }
                             }
 
-                            tokio::time::sleep(Duration::from_secs(4)).await;
+                            tokio::time::sleep(Duration::from_secs(2)).await;
                             sent.delete().await?;
-                            response.delete().await?;
+                            let _ = response.delete().await;
                         }
                         (sent, None) => {
                             sent.edit(InputMessage::html(
@@ -288,7 +288,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             ))
                             .await?;
 
-                            tokio::time::sleep(Duration::from_secs(4)).await;
+                            tokio::time::sleep(Duration::from_secs(2)).await;
                             sent.delete().await?;
 
                             return Ok(());
@@ -346,9 +346,9 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                     .await?,
                             );
 
-                            tokio::time::sleep(Duration::from_secs(4)).await;
+                            tokio::time::sleep(Duration::from_secs(2)).await;
                             sent.delete().await?;
-                            response.delete().await?;
+                            let _ = response.delete().await;
                         }
                         (sent, None) => {
                             sent.edit(InputMessage::html(
@@ -356,7 +356,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             ))
                             .await?;
 
-                            tokio::time::sleep(Duration::from_secs(4)).await;
+                            tokio::time::sleep(Duration::from_secs(2)).await;
                             sent.delete().await?;
 
                             return Ok(());
@@ -408,7 +408,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                             {
                                                 Some(update) => {
                                                     if let Some(message) = update.get_message() {
-                                                        message.delete().await?;
+                                                        let _ = message.delete().await;
                                                         message.text().to_string()
                                                     } else {
                                                         String::from("unknown")
