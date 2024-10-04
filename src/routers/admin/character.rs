@@ -276,6 +276,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
                             tokio::time::sleep(Duration::from_secs(4)).await;
                             sent.delete().await?;
+                            response.delete().await?;
                         }
                         (sent, None) => {
                             sent.edit(InputMessage::html(
@@ -342,6 +343,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
                             tokio::time::sleep(Duration::from_secs(4)).await;
                             sent.delete().await?;
+                            response.delete().await?;
                         }
                         (sent, None) => {
                             sent.edit(InputMessage::html(
@@ -356,11 +358,76 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         }
                     }
                 }
+                "gender" => {
+                    let field = t("gender");
+
+                    message
+                        .edit(InputMessage::html(t("select_button")).reply_markup(
+                            &reply_markup::inline(vec![
+                                vec![
+                                    button::inline(t("male_button"), "male"),
+                                    button::inline(t("female_button"), "female"),
+                                ],
+                                vec![button::inline(t("other_button"), "other")],
+                            ]),
+                        ))
+                        .await?;
+
+                    match conv
+                        .wait_for_update(filters::query(r"(\w+)").and(crate::filters::sudoers()))
+                        .await
+                        .unwrap()
+                    {
+                        Some(update) => {
+                            if let Some(query) = update.get_query() {
+                                if let Some(mut character) =
+                                    Character::select_by_id(conn, character_id).await?
+                                {
+                                    let splitted = utils::split_query(query.data());
+                                    character.gender = match splitted[0].as_str() {
+                                        "male" => Gender::Male,
+                                        "female" => Gender::Female,
+                                        _ => {
+                                            message
+                                                .edit(InputMessage::html(
+                                                    t("ask_field").replace("{field}", &field),
+                                                ))
+                                                .await?;
+                                            let gender = match conv
+                                                .wait_for_update(
+                                                    filters::query(r"(\w+)")
+                                                        .and(crate::filters::sudoers()),
+                                                )
+                                                .await
+                                                .unwrap()
+                                            {
+                                                Some(update) => {
+                                                    if let Some(message) = update.get_message() {
+                                                        message.delete().await?;
+                                                        message.text().to_string()
+                                                    } else {
+                                                        String::from("unknown")
+                                                    }
+                                                }
+                                                None => String::from("unknown"),
+                                            };
+
+                                            Gender::Other(gender)
+                                        }
+                                    };
+
+                                    Character::update_by_id(conn, &character, character_id).await?;
+                                }
+                            }
+                        }
+                        None => {}
+                    }
+                }
                 _ => {}
             }
         }
 
-        let fields = ["name", "photo"];
+        let fields = ["name", "photo", "gender"];
         let buttons = fields
             .iter()
             .map(|field| {
@@ -385,7 +452,11 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
     Ok(())
 }
 
-async fn list_characters(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn list_characters(
+    _client: &mut Client,
+    _update: &mut Update,
+    _data: &mut Data,
+) -> Result<()> {
     // let current_page = 1;
     //
     // let characters = Character::select_page(conn, current_page, 8).await?;

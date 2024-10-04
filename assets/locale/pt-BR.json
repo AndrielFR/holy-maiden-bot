@@ -11,8 +11,13 @@
     "select_button": "Selecione um dos botões abaixo: 📲",
     "continue_button": "Continuar ➡️",
 
+    "male_button": "Masculino ♂",
+    "female_button": "Feminino ♀",
+    "other_button": "Outro ⚪",
+
     "name": "Nome",
     "photo": "Foto",
+    "gender": "Gênero",
     "timeout": "Tempo esgotado",
     "character": "Personagem",
     "characters": "Personagens",
