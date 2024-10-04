@@ -1,7 +1,7 @@
 use rbatis::{crud, impl_delete, impl_select, impl_update, RBatis};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct Character {
     pub id: i64,
     pub name: String,
@@ -16,6 +16,8 @@ crud!(Character {}, "characters");
 impl_delete!(Character { delete_by_id(id: i64) => "`where id = #{id}`" }, "characters");
 impl_update!(Character { update_by_id(id: i64) => "`where id = #{id}`" }, "characters");
 impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
+impl_select!(Character { select_page(page: u16, limit: u16) => "`offset #{(page - 1) * limit} limit #{limit}`" }, "characters");
+impl_select!(Character { select_last() -> Option => "`order by id desc limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
 
 #[derive(Deserialize, Serialize)]
@@ -108,9 +110,10 @@ where
     serializer.serialize_u8(if *value { 1 } else { 0 })
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Gender {
+    #[default]
     Male,
     Female,
     #[serde(untagged)]

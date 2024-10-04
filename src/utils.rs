@@ -1,6 +1,5 @@
 use std::io::Cursor;
 
-use bytes::Bytes;
 use grammers_client::{
     types::{media::Uploaded, photo_sizes::VecExt, Downloadable, Photo},
     Client,

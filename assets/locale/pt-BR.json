@@ -1,17 +1,26 @@
 {
     "language_name": "Português (BR)",
     "read_more": "Leia mais",
+    "page_info": "Página <code>{page}</code> de <code>{total}</code>.",
+    "page_title": "Lista atual de <b>{type}</b>.",
 
+    "add_button": "Adicionar ➕",
     "back_button": "Voltar 🔙",
     "edit_button": "Editar ✏",
+    "list_button": "Listar 📋",
+    "select_button": "Selecione um dos botões abaixo: 📲",
+    "continue_button": "Continuar ➡️",
 
     "name": "Nome",
     "photo": "Foto",
     "timeout": "Tempo esgotado",
+    "character": "Personagem",
+    "characters": "Personagens",
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até 10<b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
     "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",
+    "object_created": "<b>{object}</b> criado com sucesso.",
     "operation_cancelled": "⚠️ — <b>{reason}</b>! Utilize o comando novamente e responda em tempo hábil.",
 
     "not_a_group": "Este comando só pode ser usado em grupos.",
@@ -23,8 +32,8 @@
 
     "help": "Aqui está uma lista de comandos que você pode usar:\n\n<b>/start</b> - Inicia o bot\n<b>/help</b> - Exibe uma lista de comandos\n<b>/language</b> - Altera o idioma usado para exibir mensagens\n\n<b>/list</b> - Lista todas as waifus/husbandos que você coletou\n<b>/delete</b> - Deleta uma waifu/husbando",
 
-    "language": "Selecione o idioma que você deseja usar para exibir mensagens:",
     "language_set": "O idioma foi alterado para {new_lang}",
+    "select_language": "Selecione o idioma que você deseja usar para exibir mensagens:",
 
     "new_character": "🎰 <b>Um personagem misterioso apareceu...!</b>\n\n🔥 — Responda a essa mensagem com o nome do personagem para coletá-lo.",
     "no_characters": "Eita! Você ainda não pegou nenhum personagem nesse grupo. Trate já de pegar algum para usar esta função. 🔙",

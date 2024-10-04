@@ -18,6 +18,14 @@ pub fn router() -> Router {
                 .and(crate::filters::sudoers()),
         ))
         .add_handler(Handler::callback_query(
+            add_character,
+            filters::query("char add").and(crate::filters::sudoers()),
+        ))
+        .add_handler(Handler::callback_query(
+            list_characters,
+            filters::query("char list page:int").and(crate::filters::sudoers()),
+        ))
+        .add_handler(Handler::callback_query(
             edit_character,
             filters::query("char edit id:int").and(crate::filters::sudoers()),
         ))
@@ -33,18 +41,22 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
 
     let splitted = message.text().split_whitespace().collect::<Vec<_>>();
 
+    let conn = db.get_conn();
+
     if splitted.len() <= 1 {
         message
-            .reply(InputMessage::html(t("invalid_command").replace(
-                "{cmd}",
-                &crate::utils::escape_html(format!("{} <id>", splitted.first().unwrap())),
-            )))
+            .reply(
+                InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(vec![
+                    vec![
+                        button::inline(t("add_button"), format!("char add")),
+                        button::inline(t("list_button"), format!("char list 1")),
+                    ],
+                ])),
+            )
             .await?;
     } else {
         match splitted[1].parse::<i64>() {
             Ok(character_id) => {
-                let conn = db.get_conn();
-
                 if let Some(character) = Character::select_by_id(conn, character_id).await? {
                     let text = t("character_info")
                         .replace("{id}", &character.id.to_string())
@@ -99,6 +111,96 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
     Ok(())
 }
 
+async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+    let conv = data.get_module::<Conversation>().unwrap();
+
+    let t = |key| i18n.get(key);
+
+    let chat = update.get_chat().unwrap();
+    let query = update.get_query().unwrap();
+    let message = query.load_message().await?;
+
+    match conv
+        .ask_message(
+            chat,
+            InputMessage::html(t("ask_field").replace("{field}", &t("name"))),
+            crate::filters::sudoers(),
+        )
+        .await
+        .unwrap()
+    {
+        (sent, Some(response)) => {
+            let conn = db.get_conn();
+
+            let last_id = Character::select_last(conn)
+                .await?
+                .map_or(1, |character| character.id);
+
+            let name = response.text();
+            let character = Character {
+                id: last_id + 1,
+                name: name.to_string(),
+                stars: 1,
+                ..Default::default()
+            };
+            Character::insert(conn, &character).await?;
+
+            sent.edit(InputMessage::html(
+                t("object_created").replace("{object}", "character"),
+            ))
+            .await?;
+
+            tokio::time::sleep(Duration::from_secs(4)).await;
+            sent.delete().await?;
+
+            message
+                .edit(
+                    InputMessage::html(
+                        t("character_info")
+                            .replace("{id}", &character.id.to_string())
+                            .replace(
+                                "{gender}",
+                                match character.gender {
+                                    Gender::Male => "💥",
+                                    Gender::Female => "🌸",
+                                    Gender::Other(_) => "🍃",
+                                },
+                            )
+                            .replace("{name}", &character.name)
+                            .replace(
+                                "{bubble}",
+                                match character.stars {
+                                    1 => "⚪",
+                                    2 => "🟢",
+                                    3 => "🔵",
+                                    4 => "🟣",
+                                    5 => "🔴",
+                                    _ => "🟡",
+                                },
+                            ),
+                    )
+                    .reply_markup(&reply_markup::inline(vec![vec![
+                        button::inline(t("continue_button"), format!("char edit {}", character.id)),
+                    ]])),
+                )
+                .await?;
+        }
+        (sent, None) => {
+            sent.edit(InputMessage::html(
+                t("operation_cancelled").replace("{reason}", &t("timeout")),
+            ))
+            .await?;
+
+            tokio::time::sleep(Duration::from_secs(4)).await;
+            sent.delete().await?;
+        }
+    }
+
+    Ok(())
+}
+
 async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
@@ -137,7 +239,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .ask_message(
                             chat,
                             InputMessage::html(t("ask_field").replace("{field}", &field)),
-                            filters::reply().and(crate::filters::sudoers()),
+                            crate::filters::sudoers(),
                         )
                         .await
                         .unwrap()
@@ -195,7 +297,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .ask_photo(
                             chat,
                             InputMessage::html(t("ask_field").replace("{field}", &field)),
-                            filters::reply().and(crate::filters::sudoers()),
+                            crate::filters::sudoers(),
                         )
                         .await
                         .unwrap()
@@ -279,6 +381,41 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
             .edit(input_message.reply_markup(&reply_markup::inline(buttons)))
             .await?;
     }
+
+    Ok(())
+}
+
+async fn list_characters(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    // let current_page = 1;
+    //
+    // let characters = Character::select_page(conn, current_page, 8).await?;
+    // let buttons = characters
+    //     .into_iter()
+    //     .map(|character| {
+    //         button::inline(
+    //             format!(
+    //                 "{0}. {1}",
+    //                 character.id,
+    //                 crate::utils::shorten_text(character.name, 12)
+    //             ),
+    //             format!(""),
+    //         )
+    //     })
+    //     .collect::<Vec<_>>();
+    // let buttons = utils::split_kb_to_columns(buttons, 2);
+    // buttons.push(utils::gen_page_buttons(
+    //     current_page.into(),
+    //     total_pages,
+    //     "char list ",
+    //     5,
+    // ));
+    // message
+    //     .reply(InputMessage::html(
+    //         t("page_title").replace("{type}", &t("characters"))
+    //             + "\n\n"
+    //             + &t("page_info").replace("{current}", &current_page.to_string()),
+    //     ))
+    //     .await?;
 
     Ok(())
 }

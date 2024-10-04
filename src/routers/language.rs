@@ -42,7 +42,9 @@ async fn language(_client: &mut Client, update: &mut Update, data: &mut Data) ->
     let buttons = utils::split_kb_to_columns(buttons, 2);
 
     message
-        .reply(InputMessage::html(t("language")).reply_markup(&reply_markup::inline(buttons)))
+        .reply(
+            InputMessage::html(t("select_language")).reply_markup(&reply_markup::inline(buttons)),
+        )
         .await?;
 
     Ok(())

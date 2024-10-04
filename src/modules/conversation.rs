@@ -77,24 +77,25 @@ impl Conversation {
             };
 
             if filter.is_ok(&self.client, &update).await {
-                let r_chat = update.get_chat().unwrap();
-                let r_message = update.get_message().unwrap();
-
-                if r_message.photo().is_some() {
-                    match r_chat {
-                        Chat::User(user) => {
-                            if user.id() == chat.id() {
-                                return Ok((sent, Some(r_message)));
-                            }
-                        }
-                        Chat::Group(group) => {
-                            if group.id() == chat.id() {
-                                if r_message.reply_to_message_id() == Some(sent.id()) {
-                                    return Ok((sent, Some(r_message)));
+                if let Some(r_chat) = update.get_chat() {
+                    if let Some(r_message) = update.get_message() {
+                        if r_message.photo().is_some() {
+                            match r_chat {
+                                Chat::User(user) => {
+                                    if user.id() == chat.id() {
+                                        return Ok((sent, Some(r_message)));
+                                    }
                                 }
+                                Chat::Group(group) => {
+                                    if group.id() == chat.id() {
+                                        if r_message.reply_to_message_id() == Some(sent.id()) {
+                                            return Ok((sent, Some(r_message)));
+                                        }
+                                    }
+                                }
+                                Chat::Channel(_) => {}
                             }
                         }
-                        Chat::Channel(_) => {}
                     }
                 }
             }

@@ -1,13 +1,21 @@
 {
     "language_name": "English (UK)",
     "read_more": "Read more",
+    "page_info": "Page <code>{page}</code> of <code>{total}</code>.",
+    "page_title": "Current list of <b>{type}</b>.",
 
+    "add_button": "Add ➕",
     "back_button": "Back 🔙",
     "edit_button": "Edit ✏",
+    "list_button": "List 📋",
+    "select_button": "Select one of the buttons below: 📲",
+    "continue_button": "Continue ➡️",
 
     "name": "Name",
     "photo": "Photo",
     "timeout": "Timeout",
+    "character": "Character",
+    "characters": "Characters",
 
     "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within 10<b>s</b></i>.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",
@@ -23,8 +31,8 @@
 
     "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
 
-    "language": "Select the language you want to use to display messages:",
     "language_set": "The language has been set to {new_lang}",
+    "select_language": "Select the language you want to use to display messages:",
 
     "new_character": "🎰 <b>A mysterious character appears...!</b>\n\n🔥 — Reply to this message with the character's name to collect it.",
     "no_characters": "Oops! You haven't collected any characters yet in this group. Go get one to use this feature. 🔙",

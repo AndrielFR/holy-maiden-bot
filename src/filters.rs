@@ -10,21 +10,23 @@ pub struct SudoUser {
 #[async_trait]
 impl Filter for SudoUser {
     async fn is_ok(&mut self, _client: &Client, update: &Update) -> bool {
-        let chat = update.get_chat().unwrap();
-
-        match chat {
-            Chat::User(user) => self.ids.contains(&user.id()),
-            Chat::Group(_) => match update.get_message() {
-                Some(message) => match message.sender() {
-                    Some(user) => self.ids.contains(&user.id()),
-                    None => false,
+        if let Some(chat) = update.get_chat() {
+            match chat {
+                Chat::User(user) => self.ids.contains(&user.id()),
+                Chat::Group(_) => match update.get_message() {
+                    Some(message) => match message.sender() {
+                        Some(user) => self.ids.contains(&user.id()),
+                        None => false,
+                    },
+                    None => match update.get_query() {
+                        Some(query) => self.ids.contains(&query.sender().id()),
+                        None => false,
+                    },
                 },
-                None => match update.get_query() {
-                    Some(query) => self.ids.contains(&query.sender().id()),
-                    None => false,
-                },
-            },
-            Chat::Channel(_) => false,
+                Chat::Channel(_) => false,
+            }
+        } else {
+            false
         }
     }
 }
