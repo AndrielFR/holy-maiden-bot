@@ -1,12 +1,15 @@
 use rbatis::{crud, impl_delete, impl_select, impl_update, RBatis};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Character {
     pub id: i64,
     pub name: String,
     pub stars: u8,
     pub image: Option<Vec<u8>>,
+    pub gender: Gender,
+
+    pub anilist_id: Option<i64>,
 }
 
 crud!(Character {}, "characters");
@@ -103,4 +106,13 @@ where
     S: Serializer,
 {
     serializer.serialize_u8(if *value { 1 } else { 0 })
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Gender {
+    Male,
+    Female,
+    #[serde(untagged)]
+    Other(String),
 }

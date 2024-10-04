@@ -1,17 +1,11 @@
 use std::{io::Cursor, time::Duration};
 
-use bytes::Bytes;
-use grammers_client::{
-    button, reply_markup,
-    types::{photo_sizes::VecExt, Downloadable},
-    Client, InputMessage, Update,
-};
+use grammers_client::{button, reply_markup, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
-use rust_anilist::models::Gender;
 
 use crate::{
-    database::models::Character,
-    modules::{Anilist, Conversation, Database, I18n},
+    database::models::{Character, Gender},
+    modules::{Conversation, Database, I18n},
     Result,
 };
 
@@ -32,7 +26,6 @@ pub fn router() -> Router {
 async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
-    let mut ani = data.get_module::<Anilist>().unwrap();
 
     let t = |key| i18n.get(key);
 
@@ -53,41 +46,40 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                 let conn = db.get_conn();
 
                 if let Some(character) = Character::select_by_id(conn, character_id).await? {
-                    if let Some(ani_character) = ani.get_char(character_id).await {
-                        let text = t("character_info")
-                            .replace("{id}", &ani_character.id.to_string())
-                            .replace(
-                                "{gender}",
-                                match ani_character.gender.unwrap_or(Gender::NonBinary) {
-                                    Gender::Male => "💥",
-                                    Gender::Female => "🌸",
-                                    Gender::NonBinary | Gender::Other(_) => "🍃",
-                                },
-                            )
-                            .replace("{name}", &character.name)
-                            .replace(
-                                "{bubble}",
-                                match character.stars {
-                                    1 => "⚪",
-                                    2 => "🟢",
-                                    3 => "🔵",
-                                    4 => "🟣",
-                                    5 => "🔴",
-                                    _ => "🟡",
-                                },
-                            );
+                    let text = t("character_info")
+                        .replace("{id}", &character.id.to_string())
+                        .replace(
+                            "{gender}",
+                            match character.gender {
+                                Gender::Male => "💥",
+                                Gender::Female => "🌸",
+                                Gender::Other(_) => "🍃",
+                            },
+                        )
+                        .replace("{name}", &character.name)
+                        .replace(
+                            "{bubble}",
+                            match character.stars {
+                                1 => "⚪",
+                                2 => "🟢",
+                                3 => "🔵",
+                                4 => "🟣",
+                                5 => "🔴",
+                                _ => "🟡",
+                            },
+                        );
 
-                        let file =
-                            crate::utils::upload_photo(client, character, &mut ani, conn).await?;
-                        message
-                            .reply(InputMessage::html(text).photo(file).reply_markup(
-                                &reply_markup::inline(vec![vec![button::inline(
-                                    t("edit_button"),
-                                    format!("char edit {}", character_id),
-                                )]]),
-                            ))
-                            .await?;
-                    }
+                    let file = crate::utils::upload_photo(client, character, conn)
+                        .await?
+                        .unwrap();
+                    message
+                        .reply(InputMessage::html(text).photo(file).reply_markup(
+                            &reply_markup::inline(vec![vec![button::inline(
+                                t("edit_button"),
+                                format!("char edit {}", character_id),
+                            )]]),
+                        ))
+                        .await?;
                 } else {
                     message
                         .reply(InputMessage::html(t("unknown_character")))
@@ -110,7 +102,6 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
 async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
-    let mut ani = data.get_module::<Anilist>().unwrap();
     let conv = data.get_module::<Conversation>().unwrap();
 
     let t = |key| i18n.get(key);
@@ -211,18 +202,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     {
                         (sent, Some(response)) => {
                             let photo = response.photo().unwrap();
-                            let thumbs = photo.thumbs();
-                            let downloadable =
-                                Downloadable::PhotoSize(thumbs.largest().cloned().unwrap());
-                            let mut download = client.iter_download(&downloadable);
-
-                            let mut bytes = Vec::new();
-                            while let Some(chunk) = download.next().await? {
-                                bytes.extend(chunk);
-                            }
-
-                            ani.update_image(character_id, Bytes::from(bytes.clone()))
-                                .await;
+                            let bytes = crate::utils::download_tele_photo(client, photo).await?;
 
                             if let Some(mut character) =
                                 Character::select_by_id(conn, character_id).await?

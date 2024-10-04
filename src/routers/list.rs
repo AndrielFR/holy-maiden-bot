@@ -1,10 +1,9 @@
 use grammers_client::{types::Chat, Client, InputMedia, InputMessage, Update};
 use grammers_friendly::prelude::*;
-use rust_anilist::models::Gender;
 
 use crate::{
-    database::models::{Character, UserCharacters},
-    modules::{Anilist, Database, I18n},
+    database::models::{Character, Gender, UserCharacters},
+    modules::{Database, I18n},
     Result,
 };
 
@@ -18,7 +17,6 @@ pub fn router() -> Router {
 async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
-    let mut ani = data.get_module::<Anilist>().unwrap();
 
     let t = |key| i18n.get(key);
 
@@ -35,33 +33,31 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
             let mut medias = Vec::new();
 
             for character_id in user_characters.characters_id {
-                if let Some(ani_character) = ani.get_char(character_id).await {
-                    if let Some(character) = Character::select_by_id(conn, character_id).await? {
-                        let caption = t("character_info")
-                            .replace("{id}", &ani_character.id.to_string())
-                            .replace(
-                                "{gender}",
-                                match ani_character.gender.unwrap_or(Gender::NonBinary) {
-                                    Gender::Male => "💥",
-                                    Gender::Female => "🌸",
-                                    Gender::NonBinary | Gender::Other(_) => "🍃",
-                                },
-                            )
-                            .replace("{name}", &character.name)
-                            .replace(
-                                "{bubble}",
-                                match character.stars {
-                                    1 => "⚪",
-                                    2 => "🟢",
-                                    3 => "🔵",
-                                    4 => "🟣",
-                                    5 => "🔴",
-                                    _ => "🟡",
-                                },
-                            );
+                if let Some(character) = Character::select_by_id(conn, character_id).await? {
+                    let caption = t("character_info")
+                        .replace("{id}", &character.id.to_string())
+                        .replace(
+                            "{gender}",
+                            match character.gender {
+                                Gender::Male => "💥",
+                                Gender::Female => "🌸",
+                                Gender::Other(_) => "🍃",
+                            },
+                        )
+                        .replace("{name}", &character.name)
+                        .replace(
+                            "{bubble}",
+                            match character.stars {
+                                1 => "⚪",
+                                2 => "🟢",
+                                3 => "🔵",
+                                4 => "🟣",
+                                5 => "🔴",
+                                _ => "🟡",
+                            },
+                        );
 
-                        let file =
-                            crate::utils::upload_photo(client, character, &mut ani, conn).await?;
+                    if let Some(file) = crate::utils::upload_photo(client, character, conn).await? {
                         medias.push(InputMedia::html(caption).photo(file));
                     }
                 }

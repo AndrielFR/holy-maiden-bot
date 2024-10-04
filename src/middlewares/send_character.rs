@@ -7,7 +7,7 @@ use rand::{thread_rng, Rng};
 
 use crate::{
     database::models::{Character, GroupCharacter},
-    modules::{Anilist, Database, I18n},
+    modules::{Database, I18n},
     Result,
 };
 
@@ -40,7 +40,6 @@ impl MiddlewareImpl for SendCharacter {
     ) -> Result<()> {
         let mut db = data.get_module::<Database>().unwrap();
         let i18n = data.get_module::<I18n>().unwrap();
-        let mut ani = data.get_module::<Anilist>().unwrap();
 
         let t = |key| i18n.get(key);
 
@@ -103,41 +102,36 @@ impl MiddlewareImpl for SendCharacter {
                     }
 
                     if let Some(random_character) = Character::select_random(conn).await? {
-                        if let Some(character) = ani.get_char(random_character.id).await {
-                            // If the character is the last one, skip it
-                            if let Some(group_character) = last_group_character {
-                                if character.id == group_character.character_id {
-                                    return Ok(());
-                                }
+                        // If the character is the last one, skip it
+                        if let Some(group_character) = last_group_character {
+                            if random_character.id == group_character.character_id {
+                                return Ok(());
                             }
+                        }
 
-                            let file = crate::utils::upload_photo(
-                                client,
-                                random_character,
-                                &mut ani,
-                                conn,
+                        let file =
+                            crate::utils::upload_photo(client, random_character.clone(), conn)
+                                .await?
+                                .unwrap();
+
+                        // Send the character
+                        let response = message
+                            .respond(
+                                InputMessage::html(t("new_character"))
+                                    .media_ttl(200)
+                                    .photo(file),
                             )
                             .await?;
 
-                            // Send the character
-                            let response = message
-                                .respond(
-                                    InputMessage::html(t("new_character"))
-                                        .media_ttl(200)
-                                        .photo(file),
-                                )
-                                .await?;
+                        // Update group last character
+                        let group_character = GroupCharacter {
+                            group_id,
+                            character_id: random_character.id,
+                            last_message_id: response.id(),
 
-                            // Update group last character
-                            let group_character = GroupCharacter {
-                                group_id,
-                                character_id: character.id,
-                                last_message_id: response.id(),
-
-                                available: true,
-                            };
-                            GroupCharacter::insert(conn, &group_character).await?;
-                        }
+                            available: true,
+                        };
+                        GroupCharacter::insert(conn, &group_character).await?;
                     }
                 }
             }

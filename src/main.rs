@@ -2,7 +2,7 @@ use grammers_client::{session::Session, Client, Config, InitParams};
 use grammers_friendly::prelude::*;
 use holy_maiden_bot::{
     middlewares::{SaveChat, SetLocale},
-    modules::{Anilist, Conversation, Database, I18n},
+    modules::{Conversation, Database, I18n},
     routers, Result,
 };
 
@@ -44,7 +44,6 @@ async fn main() -> Result<()> {
     Dispatcher::default()
         .add_module(Database::connect().await)
         .add_module(I18n::new("en-GB"))
-        .add_module(Anilist::new())
         .add_module(Conversation::new(client.clone()))
         .add_middleware(Middleware::before(SaveChat))
         .add_middleware(Middleware::before(SetLocale))

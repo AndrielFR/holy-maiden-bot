@@ -3,6 +3,8 @@ CREATE TABLE "characters" (
 	"name"	TEXT NOT NULL,
 	"image"	TEXT,
 	"stars"	INTEGER NOT NULL DEFAULT 1,
+	"gender"	TEXT NOT NULL,
+	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
