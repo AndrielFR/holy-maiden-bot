@@ -13,6 +13,7 @@
 
     "name": "Name",
     "photo": "Photo",
+    "stars": "Stars",
     "gender": "Gender",
     "timeout": "Timeout",
     "character": "Character",

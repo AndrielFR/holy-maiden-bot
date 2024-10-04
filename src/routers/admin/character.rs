@@ -214,20 +214,25 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
     let mut text = message.html_text();
     let splitted = utils::split_query(query.data());
-    let mut input_message = InputMessage::html(text.clone());
 
     if splitted.len() >= 3 {
+        let conn = db.get_conn();
+
+        let mut file = None;
         let character_id = splitted[2].parse::<i64>().unwrap();
 
         if splitted.len() == 4 {
-            let conn = db.get_conn();
-
             match splitted[3].as_str() {
                 "back" => {
                     message
-                        .edit(input_message.reply_markup(&reply_markup::inline(vec![vec![
-                            button::inline(t("edit_button"), format!("char edit {}", character_id)),
-                        ]])))
+                        .edit(
+                            InputMessage::html(text).reply_markup(&reply_markup::inline(vec![
+                                vec![button::inline(
+                                    t("edit_button"),
+                                    format!("char edit {}", character_id),
+                                )],
+                            ])),
+                        )
                         .await?;
 
                     return Ok(());
@@ -251,7 +256,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                 Character::select_by_id(conn, character_id).await?
                             {
                                 text = text.replace(&character.name, &new_name);
-                                input_message = InputMessage::html(text);
 
                                 character.name = new_name.to_string();
 
@@ -332,14 +336,15 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             }
 
                             let mut stream = Cursor::new(&bytes);
-                            let file = client
-                                .upload_stream(
-                                    &mut stream,
-                                    bytes.len(),
-                                    format!("char_{}.jpg", character_id),
-                                )
-                                .await?;
-                            input_message = input_message.photo(file);
+                            file = Some(
+                                client
+                                    .upload_stream(
+                                        &mut stream,
+                                        bytes.len(),
+                                        format!("char_{}.jpg", character_id),
+                                    )
+                                    .await?,
+                            );
 
                             tokio::time::sleep(Duration::from_secs(4)).await;
                             sent.delete().await?;
@@ -423,11 +428,59 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         None => {}
                     }
                 }
+                "stars" => {
+                    let buttons = (1..=9)
+                        .map(|stars| {
+                            button::inline(
+                                format!(
+                                    "{0} ({1})",
+                                    match stars {
+                                        1 => "⚪",
+                                        2 => "🟢",
+                                        3 => "🔵",
+                                        4 => "🟣",
+                                        5 => "🔴",
+                                        _ => "🟡",
+                                    },
+                                    stars
+                                ),
+                                stars.to_string(),
+                            )
+                        })
+                        .collect::<Vec<_>>();
+                    let buttons = utils::split_kb_to_columns(buttons, 3);
+                    message
+                        .edit(
+                            InputMessage::html(t("select_button"))
+                                .reply_markup(&reply_markup::inline(buttons)),
+                        )
+                        .await?;
+
+                    match conv
+                        .wait_for_update(filters::query(r"(\d+)").and(crate::filters::sudoers()))
+                        .await
+                        .unwrap()
+                    {
+                        Some(update) => {
+                            if let Some(query) = update.get_query() {
+                                if let Some(mut character) =
+                                    Character::select_by_id(conn, character_id).await?
+                                {
+                                    let splitted = utils::split_query(query.data());
+                                    character.stars = splitted[0].parse::<u8>().unwrap();
+
+                                    Character::update_by_id(conn, &character, character_id).await?;
+                                }
+                            }
+                        }
+                        None => {}
+                    }
+                }
                 _ => {}
             }
         }
 
-        let fields = ["name", "photo", "gender"];
+        let fields = ["name", "photo", "gender", "stars"];
         let buttons = fields
             .iter()
             .map(|field| {
@@ -443,6 +496,36 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
             t("back_button"),
             format!("char edit {} back", character_id),
         )]);
+
+        if let Some(character) = Character::select_by_id(conn, character_id).await? {
+            text = t("character_info")
+                .replace("{id}", &character.id.to_string())
+                .replace(
+                    "{gender}",
+                    match character.gender {
+                        Gender::Male => "💥",
+                        Gender::Female => "🌸",
+                        Gender::Other(_) => "🍃",
+                    },
+                )
+                .replace("{name}", &character.name)
+                .replace(
+                    "{bubble}",
+                    match character.stars {
+                        1 => "⚪",
+                        2 => "🟢",
+                        3 => "🔵",
+                        4 => "🟣",
+                        5 => "🔴",
+                        _ => "🟡",
+                    },
+                );
+        }
+        let mut input_message = InputMessage::html(text);
+
+        if let Some(file) = file {
+            input_message = input_message.photo(file);
+        }
 
         message
             .edit(input_message.reply_markup(&reply_markup::inline(buttons)))

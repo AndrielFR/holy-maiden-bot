@@ -17,6 +17,7 @@
 
     "name": "Nome",
     "photo": "Foto",
+    "stars": "Estrelas",
     "gender": "Gênero",
     "timeout": "Tempo esgotado",
     "character": "Personagem",
