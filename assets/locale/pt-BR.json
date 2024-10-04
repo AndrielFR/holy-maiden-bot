@@ -2,6 +2,18 @@
     "language_name": "Português (BR)",
     "read_more": "Leia mais",
 
+    "back_button": "Voltar 🔙",
+    "edit_button": "Editar ✏",
+
+    "name": "Nome",
+    "photo": "Foto",
+    "timeout": "Tempo esgotado",
+
+    "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até 10<b>s</b></i>.",
+    "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
+    "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",
+    "operation_cancelled": "⚠️ — <b>{reason}</b>! Utilize o comando novamente e responda em tempo hábil.",
+
     "not_a_group": "Este comando só pode ser usado em grupos.",
 
     "invalid_id": "O ID <code>{id}</code> não é válido. 🥶",
@@ -21,7 +33,7 @@
     "not_a_character": "️Isso não é um personagem válido. ⁉️",
     "wrong_character": "⚠️ — <b>Ops!</b> O nome do personagem não é este, tente novamente.",
     "character_escaped": "Ops... O personagem <details>{name}</details> acabou fugindo! (❌)\n\n🔖 Lembre-se dele(a) e seja mais rápido na próxima vez!",
-    "expired_character": "Esse personagem expirou e não pode mais ser coletado. (❌)",
+    "expired_character": "Esse personagem expirou ou já foi capturado. (❌)",
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
     "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥"
 }

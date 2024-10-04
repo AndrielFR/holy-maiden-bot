@@ -19,7 +19,10 @@ impl Filter for SudoUser {
                     Some(user) => self.ids.contains(&user.id()),
                     None => false,
                 },
-                None => false,
+                None => match update.get_query() {
+                    Some(query) => self.ids.contains(&query.sender().id()),
+                    None => false,
+                },
             },
             Chat::Channel(_) => false,
         }

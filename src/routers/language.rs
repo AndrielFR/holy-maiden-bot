@@ -15,7 +15,7 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::callback_query(
             set_language,
-            filters::query("set_language lang:str").and(filters::private().or(filters::admin())),
+            filters::query("language set lang:str").and(filters::private().or(filters::admin())),
         ))
 }
 
@@ -35,7 +35,7 @@ async fn language(_client: &mut Client, update: &mut Update, data: &mut Data) ->
                     i18n.get_from_locale(locale, "language_name"),
                     if *locale == i18n.locale() { "✔" } else { "" }
                 ),
-                format!("set_language {}", locale),
+                format!("language set {}", locale),
             )
         })
         .collect::<Vec<_>>();
@@ -57,7 +57,7 @@ async fn set_language(_client: &mut Client, update: &mut Update, data: &mut Data
     let message = query.load_message().await?;
 
     let splitted = utils::split_query(query.data());
-    let locale = splitted.get(1).unwrap();
+    let locale = splitted.get(2).unwrap();
     i18n.set_locale(locale);
 
     let t = |key| i18n.get(key);

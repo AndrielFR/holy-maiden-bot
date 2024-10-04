@@ -2,6 +2,18 @@
     "language_name": "English (UK)",
     "read_more": "Read more",
 
+    "back_button": "Back 🔙",
+    "edit_button": "Edit ✏",
+
+    "name": "Name",
+    "photo": "Photo",
+    "timeout": "Timeout",
+
+    "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within 10<b>s</b></i>.",
+    "field_updated": "The field <b>{field}</b> has been successfully updated.",
+    "error_occurred": "An error occurred while trying to update the field <b>{field}</b>.",
+    "operation_cancelled": "⚠️ — <b>{reason}</b>! Use the command again and reply in time.",
+
     "not_a_group": "This command can only be used in groups.",
 
     "invalid_id": "The ID <code>{id}</code> is not valid. 🥶",
@@ -22,7 +34,7 @@
     "not_a_character": "This is not a valid character. ⁉️",
     "wrong_character": "⚠️ — <b>Oops!</b> The character's name isn't this, try again.",
     "character_escaped": "Oops... the character <details>{name}</details> has escaped! (❌)\n\n🔖 Remember them and be faster next time!",
-    "expired_character": "This character has expired and can no longer be collected. (❌)",
+    "expired_character": "This character has expired or has already been captured. (❌)",
     "unknown_character": "🤔 — I couldn't find that character. Try again.",
     "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥"
 }

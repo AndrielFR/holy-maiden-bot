@@ -76,6 +76,19 @@ impl Anilist {
             }
         }
     }
+
+    pub async fn update_image(&mut self, id: i64, bytes: Bytes) {
+        let mut images = self.images.lock().await;
+
+        match images.entry(id) {
+            Entry::Occupied(mut e) => {
+                e.insert(bytes);
+            }
+            Entry::Vacant(e) => {
+                e.insert(bytes);
+            }
+        }
+    }
 }
 
 impl Module for Anilist {}
