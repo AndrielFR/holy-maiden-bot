@@ -46,13 +46,18 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
     let query = update.get_query().unwrap();
     let sender = query.sender();
     let message = query.load_message().await?;
+    let mut timeout = 15;
 
     match conv
         .ask_message(
             chat.clone(),
             sender,
-            InputMessage::html(t("ask_field").replace("{field}", &t("name"))),
+            InputMessage::html(t("ask_field").replace(
+                "{field}",
+                &t("name").replace("{timeout}", &timeout.to_string()),
+            )),
             crate::filters::sudoers(),
+            Duration::from_secs(timeout),
         )
         .await
         .unwrap()
@@ -109,12 +114,19 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
                 .await?;
 
             let field = t("photo");
+            timeout = 30;
+
             match conv
                 .ask_photo(
                     chat,
                     sender,
-                    InputMessage::html(t("ask_field").replace("{field}", &field)),
+                    InputMessage::html(
+                        t("ask_field")
+                            .replace("{field}", &field)
+                            .replace("{timeout}", &timeout.to_string()),
+                    ),
                     crate::filters::sudoers(),
+                    Duration::from_secs(timeout),
                 )
                 .await
                 .unwrap()
@@ -306,13 +318,19 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 }
                 "name" => {
                     let field = t("name");
+                    let timeout = 15;
 
                     match conv
                         .ask_message(
                             chat,
                             sender,
-                            InputMessage::html(t("ask_field").replace("{field}", &field)),
+                            InputMessage::html(
+                                t("ask_field")
+                                    .replace("{field}", &field)
+                                    .replace("{timeout}", &timeout.to_string()),
+                            ),
                             crate::filters::sudoers(),
+                            Duration::from_secs(timeout),
                         )
                         .await
                         .unwrap()
@@ -365,13 +383,19 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 }
                 "photo" => {
                     let field = t("photo");
+                    let timeout = 30;
 
                     match conv
                         .ask_photo(
                             chat,
                             sender,
-                            InputMessage::html(t("ask_field").replace("{field}", &field)),
+                            InputMessage::html(
+                                t("ask_field")
+                                    .replace("{field}", &field)
+                                    .replace("{timeout}", &timeout.to_string()),
+                            ),
                             crate::filters::sudoers(),
+                            Duration::from_secs(timeout),
                         )
                         .await
                         .unwrap()
@@ -434,6 +458,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 }
                 "gender" => {
                     let field = t("gender");
+                    let timeout = 10;
 
                     message
                         .edit(InputMessage::html(t("select_button")).reply_markup(
@@ -451,6 +476,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .wait_for_update(
                             sender,
                             filters::query(r"(\w+)").and(crate::filters::sudoers()),
+                            Duration::from_secs(timeout),
                         )
                         .await
                         .unwrap()
@@ -469,7 +495,9 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                         _ => {
                                             message
                                                 .edit(InputMessage::html(
-                                                    t("ask_field").replace("{field}", &field),
+                                                    t("ask_field")
+                                                        .replace("{field}", &field)
+                                                        .replace("{timeout}", &timeout.to_string()),
                                                 ))
                                                 .await?;
                                             let gender = match conv
@@ -477,6 +505,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                                     sender,
                                                     filters::query(r"(\w+)")
                                                         .and(crate::filters::sudoers()),
+                                                    Duration::from_secs(timeout),
                                                 )
                                                 .await
                                                 .unwrap()
@@ -504,6 +533,8 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     }
                 }
                 "stars" => {
+                    let timeout = 10;
+
                     let buttons = (1..=6)
                         .map(|stars| {
                             button::inline(
@@ -535,6 +566,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .wait_for_update(
                             sender,
                             filters::query(r"(\d+)").and(crate::filters::sudoers()),
+                            Duration::from_secs(timeout),
                         )
                         .await
                         .unwrap()
