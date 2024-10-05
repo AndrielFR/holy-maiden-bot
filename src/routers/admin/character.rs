@@ -504,7 +504,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     }
                 }
                 "stars" => {
-                    let buttons = (1..=9)
+                    let buttons = (1..=6)
                         .map(|stars| {
                             button::inline(
                                 format!(
