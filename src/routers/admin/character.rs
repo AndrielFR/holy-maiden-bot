@@ -613,7 +613,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
     } else {
         match splitted[1].parse::<i64>() {
             Ok(character_id) => {
-                if let Some(character) = Character::select_by_id(conn, character_id).await? {
+                if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
                     let text = t("character_info")
                         .replace("{id}", &character.id.to_string())
                         .replace(
@@ -637,23 +637,47 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                             },
                         );
 
-                    let file = crate::utils::upload_photo(client, character, conn)
+                    let file = crate::utils::upload_photo(client, character.clone(), conn)
                         .await?
                         .unwrap();
-                    message
-                        .reply(InputMessage::html(text).photo(file).reply_markup(
-                            &reply_markup::inline(vec![vec![
-                                button::inline(
-                                    t("edit_button"),
-                                    format!("char edit {}", character_id),
-                                ),
-                                button::inline(
-                                    t("delete_button"),
-                                    format!("char delete {}", character_id),
-                                ),
-                            ]]),
-                        ))
-                        .await?;
+                    match message
+                        .reply(
+                            InputMessage::html(text.clone())
+                                .reply_markup(&reply_markup::inline(vec![vec![
+                                    button::inline(
+                                        t("edit_button"),
+                                        format!("char edit {}", character_id),
+                                    ),
+                                    button::inline(
+                                        t("delete_button"),
+                                        format!("char delete {}", character_id),
+                                    ),
+                                ]]))
+                                .photo(file),
+                        )
+                        .await
+                    {
+                        Err(e) if e.is("FILE_PART_MISSING") => {
+                            character.image = None;
+                            Character::update_by_id(conn, &character, character_id).await?;
+
+                            message
+                                .reply(InputMessage::html(text).reply_markup(
+                                    &reply_markup::inline(vec![vec![
+                                        button::inline(
+                                            t("edit_button"),
+                                            format!("char edit {}", character_id),
+                                        ),
+                                        button::inline(
+                                            t("delete_button"),
+                                            format!("char delete {}", character_id),
+                                        ),
+                                    ]]),
+                                ))
+                                .await?;
+                        }
+                        Ok(_) | Err(_) => {}
+                    }
                 } else {
                     message
                         .reply(InputMessage::html(t("unknown_character")))
