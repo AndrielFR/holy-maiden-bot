@@ -657,7 +657,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                         )
                         .await
                     {
-                        Err(e) if e.is("FILE_PART_MISSING") => {
+                        Err(e) if e.is("FILE_PARTS_MISSING") => {
                             character.image = None;
                             Character::update_by_id(conn, &character, character_id).await?;
 
