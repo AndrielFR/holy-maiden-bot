@@ -72,7 +72,7 @@ impl Conversation {
         mut filter: F,
     ) -> Result<Option<Update>> {
         loop {
-            let sleep = pin!(async { tokio::time::sleep(Duration::from_secs(10)).await });
+            let sleep = pin!(async { tokio::time::sleep(Duration::from_secs(30)).await });
             let update = pin!(async { self.client.next_update().await });
 
             let update = match select(sleep, update).await {
