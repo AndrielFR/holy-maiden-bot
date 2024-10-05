@@ -35,7 +35,7 @@ pub fn router() -> Router {
         ))
 }
 
-async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
     let conv = data.get_module::<Conversation>().unwrap();
@@ -49,7 +49,7 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
 
     match conv
         .ask_message(
-            chat,
+            chat.clone(),
             sender,
             InputMessage::html(t("ask_field").replace("{field}", &t("name"))),
             crate::filters::sudoers(),
@@ -65,7 +65,7 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
                 .map_or(1, |character| character.id);
 
             let name = response.text();
-            let character = Character {
+            let mut character = Character {
                 id: last_id + 1,
                 name: name.to_string(),
                 stars: 1,
@@ -82,36 +82,104 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
             sent.delete().await?;
 
             message
-                .edit(
-                    InputMessage::html(
-                        t("character_info")
-                            .replace("{id}", &character.id.to_string())
-                            .replace(
-                                "{gender}",
-                                match character.gender {
-                                    Gender::Male => "💥",
-                                    Gender::Female => "🌸",
-                                    Gender::Other(_) => "🍃",
-                                },
-                            )
-                            .replace("{name}", &character.name)
-                            .replace(
-                                "{bubble}",
-                                match character.stars {
-                                    1 => "⚪",
-                                    2 => "🟢",
-                                    3 => "🔵",
-                                    4 => "🟣",
-                                    5 => "🔴",
-                                    _ => "🟡",
-                                },
-                            ),
-                    )
-                    .reply_markup(&reply_markup::inline(vec![vec![
-                        button::inline(t("continue_button"), format!("char edit {}", character.id)),
-                    ]])),
-                )
+                .edit(InputMessage::html(
+                    t("character_info")
+                        .replace("{id}", &character.id.to_string())
+                        .replace(
+                            "{gender}",
+                            match character.gender {
+                                Gender::Male => "💥",
+                                Gender::Female => "🌸",
+                                Gender::Other(_) => "🍃",
+                            },
+                        )
+                        .replace("{name}", &character.name)
+                        .replace(
+                            "{bubble}",
+                            match character.stars {
+                                1 => "⚪",
+                                2 => "🟢",
+                                3 => "🔵",
+                                4 => "🟣",
+                                5 => "🔴",
+                                _ => "🟡",
+                            },
+                        ),
+                ))
                 .await?;
+
+            let field = t("photo");
+            match conv
+                .ask_photo(
+                    chat,
+                    sender,
+                    InputMessage::html(t("ask_field").replace("{field}", &field)),
+                    crate::filters::sudoers(),
+                )
+                .await
+                .unwrap()
+            {
+                (sent, Some(response)) => {
+                    let photo = response.photo().unwrap();
+                    let bytes = crate::utils::download_tele_photo(client, photo).await?;
+
+                    character.image = Some(bytes.clone());
+                    match Character::update_by_id(conn, &character, character.id).await {
+                        Ok(_) => {
+                            sent.edit(InputMessage::html(
+                                t("field_updated").replace("{field}", &field.to_lowercase()),
+                            ))
+                            .await?;
+                        }
+                        Err(_) => {
+                            sent.edit(InputMessage::html(
+                                t("error_occurred").replace("{field}", &field.to_lowercase()),
+                            ))
+                            .await?;
+                        }
+                    }
+
+                    let mut stream = Cursor::new(&bytes);
+                    let file = client
+                        .upload_stream(
+                            &mut stream,
+                            bytes.len(),
+                            format!("char_{}.jpg", character.id),
+                        )
+                        .await?;
+
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    sent.delete().await?;
+                    let _ = response.delete().await;
+                    // if message.refetch().await.is_ok() {
+                    message.delete().await?;
+                    message
+                        .reply(
+                            InputMessage::html(
+                                message.html_text()
+                                    + &format!("<a href='tg://user?id={}'>ㅤ</a>", sender.id()),
+                            )
+                            .photo(file)
+                            .reply_markup(&reply_markup::inline(vec![vec![button::inline(
+                                t("continue_button"),
+                                format!("char edit {}", character.id),
+                            )]])),
+                        )
+                        .await?;
+                    // }
+                }
+                (sent, None) => {
+                    sent.edit(InputMessage::html(
+                        t("operation_cancelled").replace("{reason}", &t("timeout")),
+                    ))
+                    .await?;
+
+                    Character::delete_by_id(conn, character.id).await?;
+
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    sent.delete().await?;
+                }
+            }
         }
         (sent, None) => {
             sent.edit(InputMessage::html(
