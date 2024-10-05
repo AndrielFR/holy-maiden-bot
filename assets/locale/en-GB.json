@@ -8,7 +8,10 @@
     "back_button": "Back 🔙",
     "edit_button": "Edit ✏",
     "list_button": "List 📋",
+    "cancel_button": "Cancel ❌",
+    "delete_button": "Delete ❌",
     "select_button": "Select one of the buttons below: 📲",
+    "confirm_button": "Confirm ✔️",
     "continue_button": "Continue ➡️",
 
     "name": "Name",

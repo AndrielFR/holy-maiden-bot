@@ -8,7 +8,10 @@
     "back_button": "Voltar 🔙",
     "edit_button": "Editar ✏",
     "list_button": "Listar 📋",
+    "cancel_button": "Cancelar ❌",
+    "delete_button": "Excluir ❌",
     "select_button": "Selecione um dos botões abaixo: 📲",
+    "confirm_button": "Confirmar ✔️",
     "continue_button": "Continuar ➡️",
 
     "male_button": "Masculino ♂",
@@ -25,8 +28,10 @@
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até 10<b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
+    "confirm_delete": "Você tem certeza de que deseja excluir <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",
     "object_created": "<b>{object}</b> criado com sucesso.",
+    "object_deleted": "<b>{object}</b> <code>{id}</code> excluído com sucesso.",
     "operation_cancelled": "⚠️ — <b>{reason}</b>! Utilize o comando novamente e responda em tempo hábil.",
 
     "not_a_group": "Este comando só pode ser usado em grupos.",

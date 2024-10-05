@@ -11,104 +11,28 @@ use crate::{
 
 pub fn router() -> Router {
     Router::default()
+        .add_handler(Handler::callback_query(
+            add_character,
+            filters::query("char add").and(crate::filters::sudoers()),
+        ))
+        .add_handler(Handler::callback_query(
+            delete_character,
+            filters::query("char delete id:int").and(crate::filters::sudoers()),
+        ))
+        .add_handler(Handler::callback_query(
+            edit_character,
+            filters::query("char edit id:int").and(crate::filters::sudoers()),
+        ))
+        .add_handler(Handler::callback_query(
+            list_characters,
+            filters::query("char list page:int").and(crate::filters::sudoers()),
+        ))
         .add_handler(Handler::new_message(
             see_character,
             macros::command!("char")
                 .or(macros::command!("character"))
                 .and(crate::filters::sudoers()),
         ))
-        .add_handler(Handler::callback_query(
-            add_character,
-            filters::query("char add").and(crate::filters::sudoers()),
-        ))
-        .add_handler(Handler::callback_query(
-            list_characters,
-            filters::query("char list page:int").and(crate::filters::sudoers()),
-        ))
-        .add_handler(Handler::callback_query(
-            edit_character,
-            filters::query("char edit id:int").and(crate::filters::sudoers()),
-        ))
-}
-
-async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
-    let mut db = data.get_module::<Database>().unwrap();
-    let i18n = data.get_module::<I18n>().unwrap();
-
-    let t = |key| i18n.get(key);
-
-    let message = update.get_message().unwrap();
-
-    let splitted = message.text().split_whitespace().collect::<Vec<_>>();
-
-    let conn = db.get_conn();
-
-    if splitted.len() <= 1 {
-        message
-            .reply(
-                InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(vec![
-                    vec![
-                        button::inline(t("add_button"), format!("char add")),
-                        button::inline(t("list_button"), format!("char list 1")),
-                    ],
-                ])),
-            )
-            .await?;
-    } else {
-        match splitted[1].parse::<i64>() {
-            Ok(character_id) => {
-                if let Some(character) = Character::select_by_id(conn, character_id).await? {
-                    let text = t("character_info")
-                        .replace("{id}", &character.id.to_string())
-                        .replace(
-                            "{gender}",
-                            match character.gender {
-                                Gender::Male => "💥",
-                                Gender::Female => "🌸",
-                                Gender::Other(_) => "🍃",
-                            },
-                        )
-                        .replace("{name}", &character.name)
-                        .replace(
-                            "{bubble}",
-                            match character.stars {
-                                1 => "⚪",
-                                2 => "🟢",
-                                3 => "🔵",
-                                4 => "🟣",
-                                5 => "🔴",
-                                _ => "🟡",
-                            },
-                        );
-
-                    let file = crate::utils::upload_photo(client, character, conn)
-                        .await?
-                        .unwrap();
-                    message
-                        .reply(InputMessage::html(text).photo(file).reply_markup(
-                            &reply_markup::inline(vec![vec![button::inline(
-                                t("edit_button"),
-                                format!("char edit {}", character_id),
-                            )]]),
-                        ))
-                        .await?;
-                } else {
-                    message
-                        .reply(InputMessage::html(t("unknown_character")))
-                        .await?;
-                }
-            }
-            Err(_) => {
-                message
-                    .reply(InputMessage::html(
-                        t("invalid_id").replace("{id}", splitted[1]),
-                    ))
-                    .await?;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
@@ -148,11 +72,11 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
             Character::insert(conn, &character).await?;
 
             sent.edit(InputMessage::html(
-                t("object_created").replace("{object}", "character"),
+                t("object_created").replace("{object}", &t("character")),
             ))
             .await?;
 
-            tokio::time::sleep(Duration::from_secs(4)).await;
+            tokio::time::sleep(Duration::from_secs(2)).await;
             sent.delete().await?;
 
             message
@@ -193,9 +117,77 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
             ))
             .await?;
 
-            tokio::time::sleep(Duration::from_secs(4)).await;
+            tokio::time::sleep(Duration::from_secs(2)).await;
             sent.delete().await?;
         }
+    }
+
+    Ok(())
+}
+
+async fn delete_character(
+    _client: &mut Client,
+    update: &mut Update,
+    data: &mut Data,
+) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+    let conv = data.get_module::<Conversation>().unwrap();
+
+    let t = |key| i18n.get(key);
+
+    let chat = update.get_chat().unwrap();
+    let query = update.get_query().unwrap();
+    let message = query.load_message().await?;
+
+    let splitted = utils::split_query(query.data());
+
+    if splitted.len() >= 3 {
+        let conn = db.get_conn();
+
+        let character_id = splitted[2].parse::<i64>().unwrap();
+
+        if splitted.len() == 4 && splitted[3].as_str() == "confirm" {
+            if let Some(character) = Character::select_by_id(conn, character_id).await? {
+                Character::delete_by_id(conn, character_id).await?;
+                message
+                    .edit(InputMessage::html(
+                        t("object_deleted")
+                            .replace("{object}", &t("character"))
+                            .replace("{id}", &character.id.to_string()),
+                    ))
+                    .await?;
+
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                let _ = message.delete().await;
+
+                return Ok(());
+            } else {
+                message
+                    .edit(InputMessage::html(t("unknown_character")))
+                    .await?;
+            }
+        }
+
+        message
+            .edit(
+                InputMessage::html(
+                    t("confirm_delete")
+                        .replace("{object}", &t("character").to_lowercase())
+                        .replace("{id}", &character_id.to_string()),
+                )
+                .reply_markup(&reply_markup::inline(vec![vec![
+                    button::inline(
+                        t("confirm_button"),
+                        format!("char delete {} confirm", character_id),
+                    ),
+                    button::inline(
+                        t("cancel_button"),
+                        format!("char edit {} back", character_id),
+                    ),
+                ]])),
+            )
+            .await?;
     }
 
     Ok(())
@@ -227,10 +219,16 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     message
                         .edit(
                             InputMessage::html(text).reply_markup(&reply_markup::inline(vec![
-                                vec![button::inline(
-                                    t("edit_button"),
-                                    format!("char edit {}", character_id),
-                                )],
+                                vec![
+                                    button::inline(
+                                        t("edit_button"),
+                                        format!("char edit {}", character_id),
+                                    ),
+                                    button::inline(
+                                        t("delete_button"),
+                                        format!("char delete {}", character_id),
+                                    ),
+                                ],
                             ])),
                         )
                         .await?;
@@ -570,6 +568,92 @@ async fn list_characters(
     //             + &t("page_info").replace("{current}", &current_page.to_string()),
     //     ))
     //     .await?;
+
+    Ok(())
+}
+
+async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+
+    let t = |key| i18n.get(key);
+
+    let message = update.get_message().unwrap();
+
+    let splitted = message.text().split_whitespace().collect::<Vec<_>>();
+
+    let conn = db.get_conn();
+
+    if splitted.len() <= 1 {
+        message
+            .reply(
+                InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(vec![
+                    vec![
+                        button::inline(t("add_button"), format!("char add")),
+                        button::inline(t("list_button"), format!("char list 1")),
+                    ],
+                ])),
+            )
+            .await?;
+    } else {
+        match splitted[1].parse::<i64>() {
+            Ok(character_id) => {
+                if let Some(character) = Character::select_by_id(conn, character_id).await? {
+                    let text = t("character_info")
+                        .replace("{id}", &character.id.to_string())
+                        .replace(
+                            "{gender}",
+                            match character.gender {
+                                Gender::Male => "💥",
+                                Gender::Female => "🌸",
+                                Gender::Other(_) => "🍃",
+                            },
+                        )
+                        .replace("{name}", &character.name)
+                        .replace(
+                            "{bubble}",
+                            match character.stars {
+                                1 => "⚪",
+                                2 => "🟢",
+                                3 => "🔵",
+                                4 => "🟣",
+                                5 => "🔴",
+                                _ => "🟡",
+                            },
+                        );
+
+                    let file = crate::utils::upload_photo(client, character, conn)
+                        .await?
+                        .unwrap();
+                    message
+                        .reply(InputMessage::html(text).photo(file).reply_markup(
+                            &reply_markup::inline(vec![vec![
+                                button::inline(
+                                    t("edit_button"),
+                                    format!("char edit {}", character_id),
+                                ),
+                                button::inline(
+                                    t("delete_button"),
+                                    format!("char delete {}", character_id),
+                                ),
+                            ]]),
+                        ))
+                        .await?;
+                } else {
+                    message
+                        .reply(InputMessage::html(t("unknown_character")))
+                        .await?;
+                }
+            }
+            Err(_) => {
+                message
+                    .reply(InputMessage::html(
+                        t("invalid_id").replace("{id}", splitted[1]),
+                    ))
+                    .await?;
+            }
+        }
+    }
 
     Ok(())
 }
