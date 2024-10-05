@@ -132,11 +132,9 @@ async fn delete_character(
 ) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
-    let conv = data.get_module::<Conversation>().unwrap();
 
     let t = |key| i18n.get(key);
 
-    let chat = update.get_chat().unwrap();
     let query = update.get_query().unwrap();
     let message = query.load_message().await?;
 
@@ -465,9 +463,12 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                     Character::select_by_id(conn, character_id).await?
                                 {
                                     let splitted = utils::split_query(query.data());
-                                    character.stars = splitted[0].parse::<u8>().unwrap();
 
-                                    Character::update_by_id(conn, &character, character_id).await?;
+                                    if let Ok(stars) = splitted[0].parse::<u8>() {
+                                        character.stars = stars;
+                                        Character::update_by_id(conn, &character, character_id)
+                                            .await?;
+                                    }
                                 }
                             }
                         }
