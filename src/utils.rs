@@ -34,8 +34,8 @@ pub async fn upload_photo(
     conn: &mut RBatis,
 ) -> Result<Option<Uploaded>> {
     let bytes = character.image.unwrap_or({
-        let bytes = if character.anilist_id.is_some() {
-            download_ani_image(character.anilist_id.unwrap()).await?
+        let bytes = if let Some(id) = character.anilist_id {
+            download_ani_image(id).await?
         } else {
             Vec::new()
         };

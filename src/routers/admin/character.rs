@@ -475,7 +475,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     match conv
                         .wait_for_update(
                             sender,
-                            filters::query(r"(\w+)").and(crate::filters::sudoers()),
+                            filters::query(r"[male|female|other]").and(crate::filters::sudoers()),
                             Duration::from_secs(timeout),
                         )
                         .await
@@ -565,7 +565,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     match conv
                         .wait_for_update(
                             sender,
-                            filters::query(r"(\d+)").and(crate::filters::sudoers()),
+                            filters::query("[1,2,3,4,5,6]").and(crate::filters::sudoers()),
                             Duration::from_secs(timeout),
                         )
                         .await

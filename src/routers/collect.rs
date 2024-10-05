@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use grammers_client::{
+    button, reply_markup,
     types::{Chat, InputMessage},
     Client, Update,
 };
@@ -6,7 +9,7 @@ use grammers_friendly::prelude::*;
 
 use crate::{
     database::models::{Character, GroupCharacter, UserCharacters},
-    modules::{Database, I18n},
+    modules::{Conversation, Database, I18n},
     Result,
 };
 
@@ -24,10 +27,12 @@ async fn collect_character(
 ) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
+    let conv = data.get_module::<Conversation>().unwrap();
 
     let t = |key| i18n.get(key);
 
     let chat = update.get_chat().unwrap();
+    let user = update.get_sender().unwrap();
     let message = update.get_message().unwrap();
 
     if let Chat::Group(group) = chat {
@@ -73,38 +78,208 @@ async fn collect_character(
                                     UserCharacters::select_or_insert_by_id(conn, user_id, group_id)
                                         .await?
                                 {
-                                    let mut characters = user_characters.characters_id;
+                                    let characters = &mut user_characters.characters_id;
 
-                                    if characters.len() == 9 {
-                                        text = t("max_characters");
-                                    } else if characters.contains(&character.id) {
+                                    if characters.contains(&character.id) {
                                         text = t("has_character");
-                                    } else {
-                                        if !characters.contains(&character.id) {
-                                            text = t("character_collected")
-                                                .replace("{name}", &character.name);
+                                    } else if characters.len() == 9 {
+                                        let timeout = 5;
 
-                                            // Add character to user's collection
-                                            characters.push(character.id);
-                                            user_characters.characters_id = characters;
-                                            UserCharacters::update_by_id(
-                                                conn,
-                                                &user_characters,
-                                                user_id,
-                                                group_id,
+                                        let sent = message
+                                            .reply(
+                                                InputMessage::html(
+                                                    t("max_characters")
+                                                        .replace("{timeout}", &timeout.to_string()),
+                                                )
+                                                .reply_markup(&reply_markup::inline(vec![vec![
+                                                    button::inline(t("yes_button"), "yes"),
+                                                    button::inline(t("no_button"), "no"),
+                                                ]])),
                                             )
                                             .await?;
 
-                                            // Update character availability
-                                            group_character.available = false;
-                                            GroupCharacter::update_by_id(
-                                                conn,
-                                                &group_character,
-                                                group_id,
-                                                group_character.character_id,
+                                        match conv
+                                            .wait_for_update(
+                                                &user,
+                                                filters::query("[yes|no]"),
+                                                Duration::from_secs(timeout),
                                             )
-                                            .await?;
+                                            .await
+                                            .unwrap()
+                                        {
+                                            Some(update) => {
+                                                if let Some(query) = update.get_query() {
+                                                    let splitted = utils::split_query(query.data());
+
+                                                    match splitted[0].as_str() {
+                                                        "yes" => {
+                                                            let timeout = 10;
+
+                                                            let buttons = {
+                                                                let mut buttons = Vec::new();
+
+                                                                for id in characters.iter() {
+                                                                    if let Some(character) =
+                                                                        Character::select_by_id(
+                                                                            conn, *id,
+                                                                        )
+                                                                        .await?
+                                                                    {
+                                                                        buttons.push(
+                                                                            button::inline(
+                                                                                format!(
+                                                                                    "{0}. {1}",
+                                                                                    character.id,
+                                                                                    character.name
+                                                                                ),
+                                                                                character
+                                                                                    .id
+                                                                                    .to_string(),
+                                                                            ),
+                                                                        );
+                                                                    }
+                                                                }
+
+                                                                buttons
+                                                            };
+                                                            let buttons =
+                                                                utils::split_kb_to_columns(
+                                                                    buttons, 2,
+                                                                );
+
+                                                            sent.edit(
+                                                                InputMessage::html(
+                                                                    t("select_character").replace(
+                                                                        "{timeout}",
+                                                                        &timeout.to_string(),
+                                                                    ),
+                                                                )
+                                                                .reply_markup(
+                                                                    &reply_markup::inline(buttons),
+                                                                ),
+                                                            )
+                                                            .await?;
+
+                                                            let mut query = characters
+                                                                .iter()
+                                                                .map(|id| id.to_string())
+                                                                .collect::<Vec<String>>()
+                                                                .join("|");
+                                                            query.insert(0, '[');
+                                                            query.push(']');
+
+                                                            match conv
+                                                                .wait_for_update(
+                                                                    &user,
+                                                                    filters::query(&query),
+                                                                    Duration::from_secs(timeout),
+                                                                )
+                                                                .await
+                                                                .unwrap()
+                                                            {
+                                                                Some(update) => {
+                                                                    if let Some(query) =
+                                                                        update.get_query()
+                                                                    {
+                                                                        let splitted =
+                                                                            utils::split_query(
+                                                                                query.data(),
+                                                                            );
+
+                                                                        if let Ok(id) = splitted[0]
+                                                                            .parse::<i64>(
+                                                                        ) {
+                                                                            for character_id in
+                                                                                characters
+                                                                                    .iter_mut()
+                                                                            {
+                                                                                if *character_id
+                                                                                    == id
+                                                                                {
+                                                                                    *character_id =
+                                                                                        character.id;
+                                                                                }
+                                                                            }
+
+                                                                            UserCharacters::update_by_id(
+                                                                                conn,
+                                                                                &user_characters,
+                                                                                user_id,
+                                                                                group_id,
+                                                                            ).await?;
+
+                                                                            // Update character availability
+                                                                            group_character
+                                                                                .available = false;
+                                                                            GroupCharacter::update_by_id(
+                                                                                conn,
+                                                                                &group_character,
+                                                                                group_id,
+                                                                                group_character.character_id,
+                                                                            )
+                                                                            .await?;
+
+                                                                            if let Some(old_character) =
+                                                                                Character::select_by_id(
+                                                                                    conn,
+                                                                                    id,
+                                                                                ).await? {
+                                                                                    sent.edit(InputMessage::html(t(
+                                                                                        "character_swapped")
+                                                                                            .replace("{old}", &old_character.name)
+                                                                                            .replace("{new}", &character.name)
+                                                                                    )).await?;
+                                                                                    }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                None => {
+                                                                    sent.edit(InputMessage::html(
+                                                                        t("timeouted_operation"),
+                                                                    ))
+                                                                    .await?;
+                                                                }
+                                                            }
+                                                        }
+                                                        "no" => {
+                                                            sent.delete().await?;
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                }
+                                            }
+                                            None => {
+                                                sent.edit(InputMessage::html(t(
+                                                    "timeouted_operation",
+                                                )))
+                                                .await?;
+                                            }
                                         }
+
+                                        return Ok(());
+                                    } else {
+                                        text = t("character_collected")
+                                            .replace("{name}", &character.name);
+
+                                        // Add character to user's collection
+                                        characters.push(character.id);
+                                        UserCharacters::update_by_id(
+                                            conn,
+                                            &user_characters,
+                                            user_id,
+                                            group_id,
+                                        )
+                                        .await?;
+
+                                        // Update character availability
+                                        group_character.available = false;
+                                        GroupCharacter::update_by_id(
+                                            conn,
+                                            &group_character,
+                                            group_id,
+                                            group_character.character_id,
+                                        )
+                                        .await?;
                                     }
                                 }
                             } else {

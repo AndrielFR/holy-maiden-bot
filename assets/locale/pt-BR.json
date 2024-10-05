@@ -4,7 +4,9 @@
     "page_info": "Página <code>{page}</code> de <code>{total}</code>.",
     "page_title": "Lista atual de <b>{type}</b>.",
 
+    "no_button": "Não ❌",
     "add_button": "Adicionar ➕",
+    "yes_button": "Sim ✔️",
     "back_button": "Voltar 🔙",
     "edit_button": "Editar ✏",
     "list_button": "Listar 📋",
@@ -26,13 +28,14 @@
     "character": "Personagem",
     "characters": "Personagens",
 
-    "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até {timeout}<b>s</b></i>.",
+    "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
     "confirm_delete": "Você tem certeza de que deseja excluir <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",
     "object_created": "<b>{object}</b> criado com sucesso.",
     "object_deleted": "<b>{object}</b> <code>{id}</code> excluído com sucesso.",
     "operation_cancelled": "⚠️ — <b>{reason}</b>! Utilize o comando novamente e responda em tempo hábil.",
+    "timeouted_operation": "⚠️ — <b>Tempo esgotado</b>! Você não respondeu em tempo hábil.",
 
     "not_a_group": "Este comando só pode ser usado em grupos.",
 
@@ -49,10 +52,12 @@
     "new_character": "🎰 <b>Um personagem misterioso apareceu...!</b>\n\n🔥 — Responda a essa mensagem com o nome do personagem para coletá-lo.",
     "no_characters": "Eita! Você ainda não pegou nenhum personagem nesse grupo. Trate já de pegar algum para usar esta função. 🔙",
     "has_character": "🤚 Você já possui esse personagem nesse grupo.",
-    "max_characters": "Você atingiu o número máximo de personagens que pode coletar. ⛔",
+    "max_characters": "Você atingiu o número máximo de personagens que pode coletar. ⛔\nVocê gostaria de trocar algum por esse? ♻\n\n<i>Você tem <code>{timeout}</code><b>s</b> para decidir</i>.",
     "not_a_character": "️Isso não é um personagem válido. ⁉️",
     "wrong_character": "⚠️ — <b>Ops!</b> O nome do personagem não é este, tente novamente.",
+    "select_character": "Selecione o personagem pelo qual você deseja trocar:\n\n<i>Você tem <code>{timeout}</code><b>s</b> para escolher</i>.",
     "character_escaped": "Ops... O personagem <details>{name}</details> acabou fugindo! (❌)\n\n🔖 Lembre-se dele(a) e seja mais rápido na próxima vez!",
+    "character_swapped": "🔄 — Você trocou <b>{old}</b> por <b>{new}</b> com sucesso.",
     "expired_character": "Esse personagem expirou ou já foi capturado. (❌)",
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
     "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥"

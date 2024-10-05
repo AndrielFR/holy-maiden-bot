@@ -4,7 +4,9 @@
     "page_info": "Page <code>{page}</code> of <code>{total}</code>.",
     "page_title": "Current list of <b>{type}</b>.",
 
+    "no_button": "No ❌",
     "add_button": "Add ➕",
+    "yes_button": "Yes ✔️",
     "back_button": "Back 🔙",
     "edit_button": "Edit ✏",
     "list_button": "List 📋",
@@ -14,6 +16,10 @@
     "confirm_button": "Confirm ✔️",
     "continue_button": "Continue ➡️",
 
+    "male_button": "Male ♂",
+    "female_button": "Female ♀",
+    "other_button": "Other ⚪",
+
     "name": "Name",
     "photo": "Photo",
     "stars": "Stars",
@@ -22,10 +28,14 @@
     "character": "Character",
     "characters": "Characters",
 
-    "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within {timeout}<b>s</b></i>.",
+    "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",
+    "confirm_delete": "Are you sure you want to delete <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "An error occurred while trying to update the field <b>{field}</b>.",
+    "object_created": "<b>{object}</b> created successfully.",
+    "object_deleted": "<b>{object}</b> <code>{id}</code> deleted successfully.",
     "operation_cancelled": "⚠️ — <b>{reason}</b>! Use the command again and reply in time.",
+    "timeouted_operation": "⚠️ — <b>Timeout</b>! You didn't reply in time.",
 
     "not_a_group": "This command can only be used in groups.",
 
@@ -43,10 +53,12 @@
     "no_characters": "Oops! You haven't collected any characters yet in this group. Go get one to use this feature. 🔙",
     "has_character": "🤚 You already have this character in this group.",
     "character_info": "{gender} <code>{id}</code>. <b>{name}</b>\n\n⭐: {bubble}",
-    "max_characters": "You have reached the maximum number of characters you can collect. ⛔",
+    "max_characters": "You have reached the maximum number of characters you can collect. ⛔\nWould you like to exchange any for this one? ♻\n\n<i>You have <code>{timeout}</code><b>s</b> to decide</i>.",
     "not_a_character": "This is not a valid character. ⁉️",
     "wrong_character": "⚠️ — <b>Oops!</b> The character's name isn't this, try again.",
+    "select_character": "Select the character you want to swap with:\n\n<i>You have <code>{timeout}</code><b>s</b> to choose</i>.",
     "character_escaped": "Oops... the character <details>{name}</details> has escaped! (❌)\n\n🔖 Remember them and be faster next time!",
+    "character_swapped": "🔄 — You successfully exchanged <b>{old}</b> for <b>{new}</b>.",
     "expired_character": "This character has expired or has already been captured. (❌)",
     "unknown_character": "🤔 — I couldn't find that character. Try again.",
     "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥"
