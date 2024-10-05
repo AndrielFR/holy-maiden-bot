@@ -22,13 +22,14 @@ impl Conversation {
     pub async fn ask_message<F: Filter>(
         &self,
         chat: Chat,
+        user: &Chat,
         message: impl Into<InputMessage>,
         filter: F,
     ) -> Result<(Message, Option<Message>)> {
         let message = message.into();
         let sent = self.client.send_message(&chat, message).await?;
 
-        if let Ok(Some(update)) = self.wait_for_update(filter).await {
+        if let Ok(Some(update)) = self.wait_for_update(user, filter).await {
             if let Some(r_chat) = update.get_chat() {
                 if let Some(r_message) = update.get_message() {
                     if check_message(r_chat, &r_message, sent.id()) {
@@ -44,12 +45,13 @@ impl Conversation {
     pub async fn ask_photo<F: Filter>(
         &self,
         chat: Chat,
+        user: &Chat,
         message: impl Into<InputMessage>,
         filter: F,
     ) -> Result<(Message, Option<Message>)> {
         let sent = self.client.send_message(&chat, message).await?;
 
-        if let Ok(Some(update)) = self.wait_for_update(filter).await {
+        if let Ok(Some(update)) = self.wait_for_update(user, filter).await {
             if let Some(r_chat) = update.get_chat() {
                 if let Some(r_message) = update.get_message() {
                     if r_message.photo().is_some() {
@@ -64,7 +66,11 @@ impl Conversation {
         Ok((sent, None))
     }
 
-    pub async fn wait_for_update<F: Filter>(&self, mut filter: F) -> Result<Option<Update>> {
+    pub async fn wait_for_update<F: Filter>(
+        &self,
+        user: &Chat,
+        mut filter: F,
+    ) -> Result<Option<Update>> {
         loop {
             let sleep = pin!(async { tokio::time::sleep(Duration::from_secs(10)).await });
             let update = pin!(async { self.client.next_update().await });
@@ -75,10 +81,8 @@ impl Conversation {
             };
 
             if let Some(sender) = update.get_sender() {
-                if let Chat::User(user) = sender {
-                    if user.is_self() || user.is_bot() {
-                        continue;
-                    }
+                if sender.id() != user.id() {
+                    continue;
                 }
             }
 

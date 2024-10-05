@@ -44,11 +44,13 @@ async fn add_character(_client: &mut Client, update: &mut Update, data: &mut Dat
 
     let chat = update.get_chat().unwrap();
     let query = update.get_query().unwrap();
+    let sender = query.sender();
     let message = query.load_message().await?;
 
     match conv
         .ask_message(
             chat,
+            sender,
             InputMessage::html(t("ask_field").replace("{field}", &t("name"))),
             crate::filters::sudoers(),
         )
@@ -200,6 +202,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
     let chat = update.get_chat().unwrap();
     let query = update.get_query().unwrap();
+    let sender = query.sender();
     let message = query.load_message().await?;
 
     let mut text = message.html_text();
@@ -239,6 +242,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     match conv
                         .ask_message(
                             chat,
+                            sender,
                             InputMessage::html(t("ask_field").replace("{field}", &field)),
                             crate::filters::sudoers(),
                         )
@@ -297,6 +301,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     match conv
                         .ask_photo(
                             chat,
+                            sender,
                             InputMessage::html(t("ask_field").replace("{field}", &field)),
                             crate::filters::sudoers(),
                         )
@@ -375,12 +380,17 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .await?;
 
                     match conv
-                        .wait_for_update(filters::query(r"(\w+)").and(crate::filters::sudoers()))
+                        .wait_for_update(
+                            sender,
+                            filters::query(r"(\w+)").and(crate::filters::sudoers()),
+                        )
                         .await
                         .unwrap()
                     {
                         Some(update) => {
                             if let Some(query) = update.get_query() {
+                                let sender = query.sender();
+
                                 if let Some(mut character) =
                                     Character::select_by_id(conn, character_id).await?
                                 {
@@ -396,6 +406,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                                 .await?;
                                             let gender = match conv
                                                 .wait_for_update(
+                                                    sender,
                                                     filters::query(r"(\w+)")
                                                         .and(crate::filters::sudoers()),
                                                 )
@@ -453,7 +464,10 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         .await?;
 
                     match conv
-                        .wait_for_update(filters::query(r"(\d+)").and(crate::filters::sudoers()))
+                        .wait_for_update(
+                            sender,
+                            filters::query(r"(\d+)").and(crate::filters::sudoers()),
+                        )
                         .await
                         .unwrap()
                     {
