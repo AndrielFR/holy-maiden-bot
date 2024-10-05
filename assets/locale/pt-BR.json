@@ -26,7 +26,7 @@
     "character": "Personagem",
     "characters": "Personagens",
 
-    "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até 10<b>s</b></i>.",
+    "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até 30<b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
     "confirm_delete": "Você tem certeza de que deseja excluir <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",

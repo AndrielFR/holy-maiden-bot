@@ -29,17 +29,25 @@ impl Conversation {
         let message = message.into();
         let sent = self.client.send_message(&chat, message).await?;
 
-        if let Ok(Some(update)) = self.wait_for_update(user, filter).await {
-            if let Some(r_chat) = update.get_chat() {
-                if let Some(r_message) = update.get_message() {
-                    if check_message(r_chat, &r_message, sent.id()) {
-                        return Ok((sent, Some(r_message)));
+        let mut message = None;
+        let filter: Box<dyn Filter> = Box::new(filter);
+
+        loop {
+            if let Ok(Some(update)) = self._wait_for_update(user, filter.clone()).await {
+                if let Some(r_chat) = update.get_chat() {
+                    if let Some(r_message) = update.get_message() {
+                        if check_message(r_chat, &r_message, sent.id()) {
+                            message = Some(r_message);
+                            break;
+                        }
                     }
                 }
+            } else {
+                break;
             }
         }
 
-        Ok((sent, None))
+        Ok((sent, message))
     }
 
     pub async fn ask_photo<F: Filter>(
@@ -51,26 +59,43 @@ impl Conversation {
     ) -> Result<(Message, Option<Message>)> {
         let sent = self.client.send_message(&chat, message).await?;
 
-        if let Ok(Some(update)) = self.wait_for_update(user, filter).await {
-            if let Some(r_chat) = update.get_chat() {
-                if let Some(r_message) = update.get_message() {
-                    if r_message.photo().is_some() {
-                        if check_message(r_chat, &r_message, sent.id()) {
-                            return Ok((sent, Some(r_message)));
+        let mut message = None;
+        let filter: Box<dyn Filter> = Box::new(filter);
+
+        loop {
+            if let Ok(Some(update)) = self._wait_for_update(user, filter.clone()).await {
+                if let Some(r_chat) = update.get_chat() {
+                    if let Some(r_message) = update.get_message() {
+                        if r_message.photo().is_some() {
+                            if check_message(r_chat, &r_message, sent.id()) {
+                                message = Some(r_message);
+                            }
                         }
                     }
                 }
+            } else {
+                break;
             }
         }
 
-        Ok((sent, None))
+        Ok((sent, message))
     }
 
     pub async fn wait_for_update<F: Filter>(
         &self,
         user: &Chat,
-        mut filter: F,
+        filter: F,
     ) -> Result<Option<Update>> {
+        self._wait_for_update(user, Box::new(filter)).await
+    }
+
+    async fn _wait_for_update(
+        &self,
+        user: &Chat,
+        mut filter: Box<dyn Filter>,
+    ) -> Result<Option<Update>> {
+        let mut r = None;
+
         loop {
             let sleep = pin!(async { tokio::time::sleep(Duration::from_secs(30)).await });
             let update = pin!(async { self.client.next_update().await });
@@ -87,11 +112,12 @@ impl Conversation {
             }
 
             if filter.is_ok(&self.client, &update).await {
-                return Ok(Some(update));
+                r = Some(update);
+                break;
             }
         }
 
-        Ok(None)
+        Ok(r)
     }
 }
 
