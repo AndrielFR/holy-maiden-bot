@@ -666,7 +666,7 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
         );
     }
 
-    if let Err(_) = message.reply(InputMessage::html(&text)).await {
+    if let Err(_) = message.edit(InputMessage::html(&text)).await {
         let bytes = text.as_bytes();
         let mut stream = Cursor::new(&bytes);
 
