@@ -666,16 +666,18 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
         );
     }
 
-    let bytes = text.as_bytes();
-    let mut stream = Cursor::new(&bytes);
+    if let Err(_) = message.reply(InputMessage::html(&text)).await {
+        let bytes = text.as_bytes();
+        let mut stream = Cursor::new(&bytes);
 
-    let file = client
-        .upload_stream(&mut stream, bytes.len(), "characters.txt".to_string())
-        .await?;
+        let file = client
+            .upload_stream(&mut stream, bytes.len(), "characters.txt".to_string())
+            .await?;
 
-    message
-        .reply(InputMessage::html("Lista de personagens").file(file))
-        .await?;
+        message
+            .reply(InputMessage::html("Lista de personagens").file(file))
+            .await?;
+    }
 
     // let current_page = 1;
     //
