@@ -648,11 +648,35 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
     Ok(())
 }
 
-async fn list_characters(
-    _client: &mut Client,
-    _update: &mut Update,
-    _data: &mut Data,
-) -> Result<()> {
+async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+
+    let query = update.get_query().unwrap();
+    let message = query.load_message().await?;
+
+    let conn = db.get_conn();
+
+    let mut text = String::from("id | name | stars | gender\n");
+
+    let characters = Character::select_all(conn).await?;
+    for character in characters.iter() {
+        text += &format!(
+            "\n{0} | {1} | {2} | {3}",
+            character.id, character.name, character.stars, character.gender
+        );
+    }
+
+    let bytes = text.as_bytes();
+    let mut stream = Cursor::new(&bytes);
+
+    let file = client
+        .upload_stream(&mut stream, bytes.len(), "characters.txt".to_string())
+        .await?;
+
+    message
+        .reply(InputMessage::html("Lista de personagens").file(file))
+        .await?;
+
     // let current_page = 1;
     //
     // let characters = Character::select_page(conn, current_page, 8).await?;
