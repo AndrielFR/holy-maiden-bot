@@ -69,6 +69,7 @@ impl Conversation {
                         if r_message.photo().is_some() {
                             if check_message(r_chat, &r_message, sent.id()) {
                                 message = Some(r_message);
+                                break;
                             }
                         }
                     }
