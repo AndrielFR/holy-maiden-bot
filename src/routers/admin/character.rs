@@ -380,7 +380,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             match splitted[4].as_str() {
                                 "name" => {
                                     let field = t("artist_name");
-                                    let timeout = 10;
+                                    let timeout = 15;
 
                                     match conv
                                         .ask_message(
@@ -400,11 +400,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                         (sent, Some(response)) => {
                                             let name = response.text();
 
-                                            if name == "." || name == "0" {
-                                                character.artist = None;
-                                            } else {
-                                                character.artist = Some(name.to_string());
-                                            }
+                                            character.artist = name.to_string();
 
                                             match Character::update_by_id(
                                                 conn,
@@ -453,7 +449,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                 }
                                 "link" => {
                                     let field = t("image_link");
-                                    let timeout = 10;
+                                    let timeout = 15;
 
                                     match conv
                                         .ask_message(
@@ -473,11 +469,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                         (sent, Some(response)) => {
                                             let link = response.text();
 
-                                            if link == "." || link == "0" {
-                                                character.image_link = None;
-                                            } else {
-                                                character.image_link = Some(link.to_string());
-                                            }
+                                            character.image_link = link.to_string();
 
                                             match Character::update_by_id(
                                                 conn,
@@ -770,17 +762,18 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 format!("char edit {} back", character_id),
             )]);
 
-            let mut name = character.name;
-            if let Some(artist) = character.artist {
-                name += &format!(
+            let name = character.name
+                + &format!(
                     " | 🎨 {}.",
-                    if let Some(link) = character.image_link {
-                        format!("<a href='{0}'>{1}</a>", link, artist)
+                    if !(character.image_link == "." || character.image_link == "0") {
+                        format!(
+                            "<a href='{0}'>{1}</a>",
+                            character.image_link, character.artist
+                        )
                     } else {
-                        artist
+                        character.artist
                     }
                 );
-            }
 
             text = t("character_info")
                 .replace("{id}", &character.id.to_string())
@@ -911,17 +904,18 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         match splitted[1].parse::<i64>() {
             Ok(character_id) => {
                 if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
-                    let mut name = character.name.clone();
-                    if let Some(ref artist) = character.artist {
-                        name += &format!(
+                    let name = character.name.clone()
+                        + &format!(
                             " | 🎨 {}.",
-                            if let Some(ref link) = character.image_link {
-                                format!("<a href='{0}'>{1}</a>", link, artist)
+                            if !(character.image_link == "." || character.image_link == "0") {
+                                format!(
+                                    "<a href='{0}'>{1}</a>",
+                                    character.image_link, character.artist
+                                )
                             } else {
-                                artist.to_string()
+                                format!("{}", character.artist)
                             }
                         );
-                    }
 
                     let text = t("character_info")
                         .replace("{id}", &character.id.to_string())

@@ -34,17 +34,18 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
 
             for character_id in user_characters.characters_id {
                 if let Some(character) = Character::select_by_id(conn, character_id).await? {
-                    let mut name = character.name.clone();
-                    if let Some(ref artist) = character.artist {
-                        name += &format!(
+                    let name = character.name.clone()
+                        + &format!(
                             " | 🎨 {}.",
-                            if let Some(ref link) = character.image_link {
-                                format!("<a href='{0}'>{1}</a>", link, artist)
+                            if !(character.image_link == "." || character.image_link == "0") {
+                                format!(
+                                    "<a href='{0}'>{1}</a>",
+                                    character.image_link, character.artist
+                                )
                             } else {
-                                artist.to_string()
+                                format!("{}", character.artist)
                             }
                         );
-                    }
 
                     let caption = t("character_info")
                         .replace("{id}", &character.id.to_string())

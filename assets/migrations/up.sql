@@ -4,8 +4,8 @@ CREATE TABLE "characters" (
 	"image"	TEXT,
 	"stars"	INTEGER NOT NULL DEFAULT 1,
 	"gender"	TEXT NOT NULL,
-	"artist"	TEXT,
-	"image_link"	TEXT,
+	"artist"	TEXT NOT NULL DEFAULT 'Artist',
+	"image_link"	TEXT NOT NULL DEFAULT '.',
 	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
