@@ -911,6 +911,18 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         match splitted[1].parse::<i64>() {
             Ok(character_id) => {
                 if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
+                    let mut name = character.name.clone();
+                    if let Some(ref artist) = character.artist {
+                        name += &format!(
+                            " | 🎨 {}.",
+                            if let Some(ref link) = character.image_link {
+                                format!("<a href='{0}'>{1}</a>", link, artist)
+                            } else {
+                                artist.to_string()
+                            }
+                        );
+                    }
+
                     let text = t("character_info")
                         .replace("{id}", &character.id.to_string())
                         .replace(
@@ -921,7 +933,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                                 Gender::Other(_) => "🍃",
                             },
                         )
-                        .replace("{name}", &character.name)
+                        .replace("{name}", &name)
                         .replace(
                             "{bubble}",
                             match character.stars {
