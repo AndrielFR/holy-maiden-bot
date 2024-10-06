@@ -20,13 +20,17 @@
     "female_button": "Female ♀",
     "other_button": "Other ⚪",
 
+    "link": "Link",
     "name": "Name",
     "photo": "Photo",
     "stars": "Stars",
+    "artist": "Artist",
     "gender": "Gender",
     "timeout": "Timeout",
     "character": "Character",
     "characters": "Characters",
+    "image_link": "Image link",
+    "artist_name": "Artist name",
 
     "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",

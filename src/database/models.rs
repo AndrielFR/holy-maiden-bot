@@ -8,6 +8,8 @@ pub struct Character {
     pub stars: u8,
     pub image: Option<Vec<u8>>,
     pub gender: Gender,
+    pub artist: Option<String>,
+    pub image_link: Option<String>,
 
     pub anilist_id: Option<i64>,
 }

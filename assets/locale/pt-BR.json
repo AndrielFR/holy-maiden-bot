@@ -23,10 +23,13 @@
     "name": "Nome",
     "photo": "Foto",
     "stars": "Estrelas",
+    "artist": "Artista",
     "gender": "Gênero",
     "timeout": "Tempo esgotado",
     "character": "Personagem",
     "characters": "Personagens",
+    "image_link": "Link da imagem",
+    "artist_name": "Nome do artista",
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
