@@ -399,7 +399,12 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                     {
                                         (sent, Some(response)) => {
                                             let name = response.text();
-                                            character.artist = Some(name.to_string());
+
+                                            if name == "." || name == "0" {
+                                                character.artist = None;
+                                            } else {
+                                                character.artist = Some(name.to_string());
+                                            }
 
                                             match Character::update_by_id(
                                                 conn,
@@ -467,7 +472,12 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                     {
                                         (sent, Some(response)) => {
                                             let link = response.text();
-                                            character.image_link = Some(link.to_string());
+
+                                            if link == "." || link == "0" {
+                                                character.image_link = None;
+                                            } else {
+                                                character.image_link = Some(link.to_string());
+                                            }
 
                                             match Character::update_by_id(
                                                 conn,
