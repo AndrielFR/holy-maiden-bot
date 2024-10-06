@@ -86,6 +86,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
 
             tokio::time::sleep(Duration::from_secs(2)).await;
             sent.delete().await?;
+            let _ = response.delete().await;
 
             message
                 .edit(InputMessage::html(
