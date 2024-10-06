@@ -52,10 +52,11 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
         .ask_message(
             chat.clone(),
             sender,
-            InputMessage::html(t("ask_field").replace(
-                "{field}",
-                &t("name").replace("{timeout}", &timeout.to_string()),
-            )),
+            InputMessage::html(
+                t("ask_field")
+                    .replace("{field}", &t("name"))
+                    .replace("{timeout}", &timeout.to_string()),
+            ),
             crate::filters::sudoers(),
             Duration::from_secs(timeout),
         )
