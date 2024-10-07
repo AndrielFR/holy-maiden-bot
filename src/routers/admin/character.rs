@@ -979,9 +979,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
             }
         } else {
             message
-                .reply(InputMessage::html(
-                    t("invalid_id").replace("{id}", splitted[1]),
-                ))
+                .reply(InputMessage::html(t("unknown_character")))
                 .await?;
         }
     }

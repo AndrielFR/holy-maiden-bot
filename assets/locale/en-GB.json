@@ -43,7 +43,6 @@
 
     "not_a_group": "This command can only be used in groups.",
 
-    "invalid_id": "The ID <code>{id}</code> is not valid. 🥶",
     "invalid_command": "🤨 — Command used in the <b>wrong</b> way.\n\nTry: <code>{cmd}</code>",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
