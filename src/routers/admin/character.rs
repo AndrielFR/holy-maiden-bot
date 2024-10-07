@@ -29,12 +29,12 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::new_message(
             see_character,
-            macros::command!("char")
+            macros::command!("/!.", "char")
                 .or(macros::command!("character"))
-                .or(macros::command!("c"))
-                .or(macros::command!("perso"))
+                .or(macros::command!("/!.", "c"))
+                .or(macros::command!("/!.", "perso"))
                 .or(macros::command!("personagem"))
-                .or(macros::command!("p")),
+                .or(macros::command!("/!.", "p")),
         ))
 }
 
