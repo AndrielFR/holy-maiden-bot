@@ -18,6 +18,7 @@ crud!(Character {}, "characters");
 impl_delete!(Character { delete_by_id(id: i64) => "`where id = #{id}`" }, "characters");
 impl_update!(Character { update_by_id(id: i64) => "`where id = #{id}`" }, "characters");
 impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
+impl_select!(Character { select_by_name(name: &str) -> Option => "`where name like #{'%' + name + '%'} limit 1`" }, "characters");
 impl_select!(Character { select_page(page: u16, limit: u16) => "`offset #{(page - 1) * limit} limit #{limit}`" }, "characters");
 impl_select!(Character { select_last() -> Option => "`order by id desc limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
