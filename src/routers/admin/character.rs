@@ -6,6 +6,7 @@ use grammers_friendly::prelude::*;
 use crate::{
     database::models::{Character, Gender},
     modules::{Conversation, Database, I18n},
+    utils::escape_html,
     Result,
 };
 
@@ -892,17 +893,26 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
 
     let conn = db.get_conn();
 
-    if splitted.len() <= 1 {
-        message
-            .reply(
-                InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(vec![
-                    vec![
-                        button::inline(t("add_button"), format!("char add")),
-                        button::inline(t("list_button"), format!("char list 1")),
-                    ],
-                ])),
-            )
-            .await?;
+    if splitted.len() == 1 {
+        if crate::filters::sudoers().is_ok(client, update).await {
+            message
+                .reply(
+                    InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(
+                        vec![vec![
+                            button::inline(t("add_button"), format!("char add")),
+                            button::inline(t("list_button"), format!("char list 1")),
+                        ]],
+                    )),
+                )
+                .await?;
+        } else {
+            message
+                .reply(InputMessage::html(t("invalid_command").replace(
+                    "{cmd}",
+                    &escape_html(format!("{} <name|id>", splitted[0])),
+                )))
+                .await?;
+        }
     } else {
         if let Some(character_id) = match splitted[1].parse::<i64>() {
             Ok(id) => Some(id),
