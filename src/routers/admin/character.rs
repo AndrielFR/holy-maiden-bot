@@ -29,9 +29,7 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::new_message(
             see_character,
-            macros::command!("char")
-                .or(macros::command!("character"))
-                .and(crate::filters::sudoers()),
+            macros::command!("char").or(macros::command!("character")),
         ))
 }
 
@@ -948,44 +946,24 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                         },
                     );
 
+                let mut input_message = InputMessage::html(text);
+
+                if crate::filters::sudoers().is_ok(client, update).await {
+                    input_message = input_message.reply_markup(&reply_markup::inline(vec![vec![
+                        button::inline(t("edit_button"), format!("char edit {}", character_id)),
+                        button::inline(t("delete_button"), format!("char delete {}", character_id)),
+                    ]]));
+                }
+
                 let file = crate::utils::upload_photo(client, character.clone(), conn)
                     .await?
                     .unwrap();
-                match message
-                    .reply(
-                        InputMessage::html(text.clone())
-                            .reply_markup(&reply_markup::inline(vec![vec![
-                                button::inline(
-                                    t("edit_button"),
-                                    format!("char edit {}", character_id),
-                                ),
-                                button::inline(
-                                    t("delete_button"),
-                                    format!("char delete {}", character_id),
-                                ),
-                            ]]))
-                            .photo(file),
-                    )
-                    .await
-                {
+                match message.reply(input_message.clone().photo(file)).await {
                     Err(e) if e.is("FILE_PARTS_MISSING") || e.is("FILE_PARTS_INVALID") => {
                         character.image = None;
                         Character::update_by_id(conn, &character, character_id).await?;
 
-                        message
-                            .reply(InputMessage::html(text).reply_markup(&reply_markup::inline(
-                                vec![vec![
-                                    button::inline(
-                                        t("edit_button"),
-                                        format!("char edit {}", character_id),
-                                    ),
-                                    button::inline(
-                                        t("delete_button"),
-                                        format!("char delete {}", character_id),
-                                    ),
-                                ]],
-                            )))
-                            .await?;
+                        message.reply(input_message).await?;
                     }
                     Ok(_) | Err(_) => {}
                 }
