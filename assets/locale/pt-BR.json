@@ -33,6 +33,7 @@
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
+    "guess_cheated": "🤨 — Parece que você tentou trapacear, mas eu te peguei! (❌)\n\nPor sua causa, o personagem <details>{name}</details> acabou fugindo.",
     "confirm_delete": "Você tem certeza de que deseja excluir <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "Ocorreu um erro ao tentar atualizar o campo <b>{field}</b>.",
     "object_created": "<b>{object}</b> criado com sucesso.",

@@ -34,6 +34,7 @@
 
     "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within <code>{timeout}</code><b>s</b></i>.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",
+    "guess_cheated": "🤨 — It seems you tried to cheat, but I caught you! (❌)\n\nBecause of you, the character <details>{name}</details> has escaped.",
     "confirm_delete": "Are you sure you want to delete <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "An error occurred while trying to update the field <b>{field}</b>.",
     "object_created": "<b>{object}</b> created successfully.",

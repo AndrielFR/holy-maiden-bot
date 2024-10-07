@@ -51,27 +51,35 @@ async fn collect_character(
                     if let Some(character) =
                         Character::select_by_id(conn, group_character.character_id).await?
                     {
+                        let guess = message.text().trim().to_lowercase();
+                        let sender = message.sender().unwrap();
+
                         // Check if character is available
                         if group_character.available {
-                            if message
-                                .text()
-                                .to_lowercase()
-                                .split_whitespace()
-                                .find_map(|guess| {
-                                    if guess.len() > 2 {
-                                        for part in character.name.to_lowercase().split_whitespace()
-                                        {
-                                            if guess == part {
-                                                return Some(true);
-                                            }
-                                        }
-                                    }
-
-                                    None
-                                })
-                                .is_some()
+                            if message.via_bot_id().is_some()
+                                || match sender {
+                                    Chat::User(ref user) => user.is_bot(),
+                                    _ => false,
+                                }
                             {
-                                let sender = message.sender().unwrap();
+                                // Delete group last character
+                                GroupCharacter::delete_by_id(
+                                    conn,
+                                    group_id,
+                                    group_character.character_id,
+                                )
+                                .await?;
+
+                                message
+                                    .reply(InputMessage::html(
+                                        t("guess_cheated").replace("{name}", &character.name),
+                                    ))
+                                    .await?;
+
+                                return Ok(());
+                            }
+
+                            if character.name.to_lowercase().trim().contains(&guess) {
                                 let user_id = sender.id();
 
                                 if let Some(mut user_characters) =

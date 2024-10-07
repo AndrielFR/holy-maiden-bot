@@ -342,7 +342,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         {
                             (sent, Some(response)) => {
                                 let new_name = response.text();
-                                character.name = new_name.to_string();
+                                character.name = new_name.trim().to_string();
 
                                 match Character::update_by_id(conn, &character, character_id).await
                                 {
@@ -404,7 +404,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                         (sent, Some(response)) => {
                                             let name = response.text();
 
-                                            character.artist = name.to_string();
+                                            character.artist = name.trim().to_string();
 
                                             match Character::update_by_id(
                                                 conn,
