@@ -120,7 +120,7 @@ pub enum Gender {
     Male,
     Female,
     #[serde(untagged)]
-    Other(String),
+    Other,
 }
 
 impl std::fmt::Display for Gender {
@@ -128,7 +128,7 @@ impl std::fmt::Display for Gender {
         f.write_str(match self {
             Self::Male => "male",
             Self::Female => "female",
-            Self::Other(other) => other.as_str(),
+            Self::Other => "other",
         })
     }
 }

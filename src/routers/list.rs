@@ -54,7 +54,7 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
                             match character.gender {
                                 Gender::Male => "💥",
                                 Gender::Female => "🌸",
-                                Gender::Other(_) => "🍃",
+                                Gender::Other => "🍃",
                             },
                         )
                         .replace("{name}", &name)

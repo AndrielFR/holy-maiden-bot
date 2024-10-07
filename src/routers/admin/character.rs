@@ -101,7 +101,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
                             match character.gender {
                                 Gender::Male => "💥",
                                 Gender::Female => "🌸",
-                                Gender::Other(_) => "🍃",
+                                Gender::Other => "🍃",
                             },
                         )
                         .replace("{name}", &character.name)
@@ -620,7 +620,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         }
                     }
                     "gender" => {
-                        let field = t("gender");
                         let timeout = 10;
 
                         message
@@ -647,43 +646,12 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         {
                             Some(update) => {
                                 if let Some(query) = update.get_query() {
-                                    let sender = query.sender();
-
                                     let splitted = utils::split_query(query.data());
+
                                     character.gender = match splitted[0].as_str() {
                                         "male" => Gender::Male,
                                         "female" => Gender::Female,
-                                        _ => {
-                                            message
-                                                .edit(InputMessage::html(
-                                                    t("ask_field")
-                                                        .replace("{field}", &field)
-                                                        .replace("{timeout}", &timeout.to_string()),
-                                                ))
-                                                .await?;
-                                            let gender = match conv
-                                                .wait_for_update(
-                                                    sender,
-                                                    filters::query(r"(\w+)")
-                                                        .and(crate::filters::sudoers()),
-                                                    Duration::from_secs(timeout),
-                                                )
-                                                .await
-                                                .unwrap()
-                                            {
-                                                Some(update) => {
-                                                    if let Some(message) = update.get_message() {
-                                                        let _ = message.delete().await;
-                                                        message.text().to_string()
-                                                    } else {
-                                                        String::from("unknown")
-                                                    }
-                                                }
-                                                None => String::from("unknown"),
-                                            };
-
-                                            Gender::Other(gender)
-                                        }
+                                        _ => Gender::Other,
                                     };
 
                                     Character::update_by_id(conn, &character, character_id).await?;
@@ -786,7 +754,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                     match character.gender {
                         Gender::Male => "💥",
                         Gender::Female => "🌸",
-                        Gender::Other(_) => "🍃",
+                        Gender::Other => "🍃",
                     },
                 )
                 .replace("{name}", &name)
@@ -945,7 +913,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                         match character.gender {
                             Gender::Male => "💥",
                             Gender::Female => "🌸",
-                            Gender::Other(_) => "🍃",
+                            Gender::Other => "🍃",
                         },
                     )
                     .replace("{name}", &name)
