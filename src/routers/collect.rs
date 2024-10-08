@@ -316,26 +316,27 @@ async fn collect_character(
 }
 
 fn guess_matches(guess: &str, names: Vec<String>) -> bool {
-    let mut result = false;
     let guess_splitted = guess.split_whitespace().collect::<Vec<&str>>();
 
     if guess_splitted.len() == 1 {
         for name in names.iter() {
             if name.len() == 1 {
-                result = guess == *name;
+                return guess == *name;
             } else {
                 for part in name.split_whitespace() {
-                    result = guess == part;
+                    if guess == part {
+                        return true;
+                    }
                 }
             }
         }
     } else {
         for name in names.iter() {
             if name.contains(guess) {
-                result = true;
+                return true;
             }
         }
     }
 
-    result
+    false
 }
