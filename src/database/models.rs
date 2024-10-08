@@ -120,7 +120,6 @@ pub enum Gender {
     #[default]
     Male,
     Female,
-    #[serde(untagged)]
     Other,
 }
 
