@@ -1,4 +1,6 @@
-use grammers_client::{reply_markup, types::Chat, Client, InputMedia, InputMessage, Update};
+use grammers_client::{
+    button, reply_markup, types::Chat, Client, InputMedia, InputMessage, Update,
+};
 use grammers_friendly::prelude::*;
 
 use crate::{
@@ -70,12 +72,14 @@ async fn list_characters_individually(
                                 t("character_info"),
                                 &character,
                             );
-                            let buttons = utils::gen_page_buttons(
-                                index as i64,
-                                user_characters.characters_id.len() as i64,
-                                "list :page:",
-                                5,
-                            );
+                            let mut buttons = Vec::new();
+
+                            if index > 1 {
+                                buttons.push(button::inline("⬅", format!("list {}", index - 1)));
+                            }
+                            if index < user_characters.characters_id.len() {
+                                buttons.push(button::inline("➡", format!("list {}", index + 1)));
+                            }
 
                             let mut input_message = InputMessage::html(caption)
                                 .reply_markup(&reply_markup::inline(vec![buttons]));
