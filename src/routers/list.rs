@@ -68,16 +68,18 @@ async fn list_characters_individually(
                         if let Some(character) =
                             Character::select_by_id(conn, *character_id).await?
                         {
+                            let total = user_characters.characters_id.len();
+
                             let caption = crate::utils::construct_character_info(
                                 t("character_info"),
                                 &character,
-                            );
+                            ) + &format!("\n🔖 {}/{}", index, total);
                             let mut buttons = Vec::new();
 
                             if index > 1 {
                                 buttons.push(button::inline("⬅", format!("list {}", index - 1)));
                             }
-                            if index < user_characters.characters_id.len() {
+                            if index < total {
                                 buttons.push(button::inline("➡", format!("list {}", index + 1)));
                             }
 
