@@ -6,7 +6,10 @@ use grammers_client::{
 };
 use rbatis::RBatis;
 
-use crate::{database::models::Character, Result};
+use crate::{
+    database::models::{Character, Gender},
+    Result,
+};
 
 pub fn shorten_text(text: impl Into<String>, size: usize) -> String {
     let mut text = text.into();
@@ -26,6 +29,45 @@ pub fn escape_html(text: impl Into<String>) -> String {
         .replace(r"\", "&quot;")
         .replace("'", "&#x27;")
         .replace("/", "&#x2F;")
+}
+
+pub fn construct_character_info(template: String, character: &Character) -> String {
+    let name = character.name.clone()
+        + &format!(
+            " | 🎨 {}.",
+            if !(character.image_link == "." || character.image_link == "0") {
+                format!(
+                    "<a href='{0}'>{1}</a>",
+                    character.image_link, character.artist
+                )
+            } else {
+                character.artist.clone()
+            }
+        );
+    let text = template
+        .replace("{id}", &character.id.to_string())
+        .replace(
+            "{gender}",
+            match character.gender {
+                Gender::Male => "💥",
+                Gender::Female => "🌸",
+                Gender::Other => "🍃",
+            },
+        )
+        .replace("{name}", &name)
+        .replace(
+            "{bubble}",
+            match character.stars {
+                1 => "⚪",
+                2 => "🟢",
+                3 => "🔵",
+                4 => "🟣",
+                5 => "🔴",
+                _ => "🟡",
+            },
+        );
+
+    text
 }
 
 pub async fn upload_photo(

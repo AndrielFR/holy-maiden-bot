@@ -291,7 +291,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
     let sender = query.sender();
     let message = query.load_message().await?;
 
-    let mut text = message.html_text();
+    let text = message.html_text();
     let splitted = utils::split_query(query.data());
 
     if splitted.len() >= 3 {
@@ -1084,42 +1084,10 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 format!("char edit {} back", character_id),
             )]);
 
-            let name = character.name
-                + &format!(
-                    " | 🎨 {}.",
-                    if !(character.image_link == "." || character.image_link == "0") {
-                        format!(
-                            "<a href='{0}'>{1}</a>",
-                            character.image_link, character.artist
-                        )
-                    } else {
-                        character.artist
-                    }
-                );
-
-            text = t("character_info")
-                .replace("{id}", &character.id.to_string())
-                .replace(
-                    "{gender}",
-                    match character.gender {
-                        Gender::Male => "💥",
-                        Gender::Female => "🌸",
-                        Gender::Other => "🍃",
-                    },
-                )
-                .replace("{name}", &name)
-                .replace(
-                    "{bubble}",
-                    match character.stars {
-                        1 => "⚪",
-                        2 => "🟢",
-                        3 => "🔵",
-                        4 => "🟣",
-                        5 => "🔴",
-                        _ => "🟡",
-                    },
-                );
-            let mut input_message = InputMessage::html(text);
+            let mut input_message = InputMessage::html(crate::utils::construct_character_info(
+                t("character_info"),
+                &character,
+            ));
 
             if let Some(file) = file {
                 input_message = input_message.photo(file);
@@ -1243,43 +1211,10 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
             }
         } {
             if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
-                let name = character.name.clone()
-                    + &format!(
-                        " | 🎨 {}.",
-                        if !(character.image_link == "." || character.image_link == "0") {
-                            format!(
-                                "<a href='{0}'>{1}</a>",
-                                character.image_link, character.artist
-                            )
-                        } else {
-                            format!("{}", character.artist)
-                        }
-                    );
-
-                let text = t("character_info")
-                    .replace("{id}", &character.id.to_string())
-                    .replace(
-                        "{gender}",
-                        match character.gender {
-                            Gender::Male => "💥",
-                            Gender::Female => "🌸",
-                            Gender::Other => "🍃",
-                        },
-                    )
-                    .replace("{name}", &name)
-                    .replace(
-                        "{bubble}",
-                        match character.stars {
-                            1 => "⚪",
-                            2 => "🟢",
-                            3 => "🔵",
-                            4 => "🟣",
-                            5 => "🔴",
-                            _ => "🟡",
-                        },
-                    );
-
-                let mut input_message = InputMessage::html(text);
+                let mut input_message = InputMessage::html(crate::utils::construct_character_info(
+                    t("character_info"),
+                    &character,
+                ));
 
                 if crate::filters::sudoers().is_ok(client, update).await {
                     input_message = input_message.reply_markup(&reply_markup::inline(vec![vec![
