@@ -79,7 +79,11 @@ async fn collect_character(
                                 return Ok(());
                             }
 
-                            if character.name.to_lowercase().trim().contains(&guess) {
+                            let name = character.name.trim().to_lowercase();
+                            let mut names = vec![name.as_str()];
+                            character.aliases.iter().for_each(|alias| names.push(alias));
+
+                            if guess_matches(&guess, names) {
                                 let user_id = sender.id();
 
                                 if let Some(mut user_characters) =
@@ -306,4 +310,29 @@ async fn collect_character(
     }
 
     Ok(())
+}
+
+fn guess_matches(guess: &str, names: Vec<&str>) -> bool {
+    let mut result = false;
+    let guess_splitted = guess.split_whitespace().collect::<Vec<&str>>();
+
+    if guess_splitted.len() == 1 {
+        for name in names.iter() {
+            if name.len() == 1 {
+                result = guess == *name;
+            } else {
+                for part in name.split_whitespace() {
+                    result = guess == part;
+                }
+            }
+        }
+    } else {
+        for name in names.iter() {
+            if name.contains(guess) {
+                result = true;
+            }
+        }
+    }
+
+    result
 }
