@@ -80,8 +80,11 @@ async fn collect_character(
                             }
 
                             let name = character.name.trim().to_lowercase();
-                            let mut names = vec![name.as_str()];
-                            character.aliases.iter().for_each(|alias| names.push(alias));
+                            let mut names = vec![name];
+                            character
+                                .aliases
+                                .iter()
+                                .for_each(|alias| names.push(alias.to_lowercase()));
 
                             if guess_matches(&guess, names) {
                                 let user_id = sender.id();
@@ -312,7 +315,7 @@ async fn collect_character(
     Ok(())
 }
 
-fn guess_matches(guess: &str, names: Vec<&str>) -> bool {
+fn guess_matches(guess: &str, names: Vec<String>) -> bool {
     let mut result = false;
     let guess_splitted = guess.split_whitespace().collect::<Vec<&str>>();
 
