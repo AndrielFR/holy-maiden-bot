@@ -22,10 +22,12 @@
 
     "link": "Link",
     "name": "Name",
+    "alias": "Alias",
     "photo": "Photo",
     "stars": "Stars",
     "artist": "Artist",
     "gender": "Gender",
+    "aliases": "Aliases",
     "timeout": "Timeout",
     "character": "Character",
     "characters": "Characters",
@@ -33,14 +35,18 @@
     "artist_name": "Artist name",
 
     "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within <code>{timeout}</code><b>s</b></i>.",
+    "max_aliases": "You have reached the maximum number of aliases you can add. ⛔\n\nRemove some to add another.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",
     "guess_cheated": "🤨 — It seems you tried to cheat, but I caught you! (❌)\n\nBecause of you, the character <details>{name}</details> has escaped.",
-    "confirm_delete": "Are you sure you want to delete <b>{object}</b> <code>{id}</code>?",
+    "alias_too_long": "The alias is too long, it must contain at most <code>{max}</code> characters. ⛔",
+    "confirm_delete": "Are you sure you want to delete the <b>{object}</b> <code>{id}</code>?",
     "error_occurred": "An error occurred while trying to update the field <b>{field}</b>.",
     "object_created": "<b>{object}</b> created successfully.",
     "object_deleted": "<b>{object}</b> <code>{id}</code> deleted successfully.",
+    "alias_too_short": "The alias is too short, it must contain at least <code>{min}</code> characters. ⛔",
     "operation_cancelled": "⚠️ — <b>{reason}</b>! Use the command again and reply in time.",
     "timeouted_operation": "⚠️ — <b>Timeout</b>! You didn't reply in time.",
+    "alias_already_exists": "⚠️ — There is already an alias with this name. Try another.",
 
     "not_a_group": "This command can only be used in groups.",
 

@@ -5,6 +5,7 @@ CREATE TABLE "characters" (
 	"stars"	INTEGER NOT NULL DEFAULT 1,
 	"gender"	TEXT NOT NULL,
 	"artist"	TEXT NOT NULL DEFAULT 'Artist',
+	"aliases"	TEXT NOT NULL DEFAULT '[]',
 	"image_link"	TEXT NOT NULL DEFAULT '.',
 	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)

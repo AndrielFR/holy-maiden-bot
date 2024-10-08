@@ -9,6 +9,7 @@ pub struct Character {
     pub image: Option<Vec<u8>>,
     pub gender: Gender,
     pub artist: String,
+    pub aliases: Vec<String>,
     pub image_link: String,
 
     pub anilist_id: Option<i64>,

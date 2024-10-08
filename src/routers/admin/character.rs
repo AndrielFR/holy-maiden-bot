@@ -77,7 +77,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
             let name = response.text();
             let mut character = Character {
                 id: last_id + 1,
-                name: name.to_string(),
+                name: name.trim().to_string(),
                 stars: 1,
                 ..Default::default()
             };
@@ -264,12 +264,12 @@ async fn delete_character(
                 )
                 .reply_markup(&reply_markup::inline(vec![vec![
                     button::inline(
-                        t("confirm_button"),
-                        format!("char delete {} confirm", character_id),
-                    ),
-                    button::inline(
                         t("cancel_button"),
                         format!("char edit {} back", character_id),
+                    ),
+                    button::inline(
+                        t("confirm_button"),
+                        format!("char delete {} confirm", character_id),
                     ),
                 ]])),
             )
@@ -473,7 +473,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                         (sent, Some(response)) => {
                                             let link = response.text();
 
-                                            character.image_link = link.to_string();
+                                            character.image_link = link.trim().to_string();
 
                                             match Character::update_by_id(
                                                 conn,
@@ -546,6 +546,356 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
                             return Ok(());
                         }
+                    }
+                    "aliases" => {
+                        let buttons = character
+                            .aliases
+                            .iter()
+                            .enumerate()
+                            .map(|(index, alias)| {
+                                button::inline(
+                                    alias,
+                                    format!("char edit {0} aliases edit {1}", character_id, index),
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        let mut buttons = utils::split_kb_to_columns(buttons, 1);
+
+                        if splitted.len() >= 5 {
+                            match splitted[4].as_str() {
+                                "add" => {
+                                    if character.aliases.len() >= 5 {
+                                        let sent = message
+                                            .reply(InputMessage::html(t("max_aliases")))
+                                            .await?;
+                                        tokio::time::sleep(Duration::from_secs(2)).await;
+                                        sent.delete().await?;
+
+                                        return Ok(());
+                                    }
+
+                                    let field = t("alias");
+                                    let timeout = 10;
+
+                                    match conv
+                                        .ask_message(
+                                            chat,
+                                            sender,
+                                            InputMessage::html(
+                                                t("ask_field")
+                                                    .replace("{field}", &field)
+                                                    .replace("{timeout}", &timeout.to_string()),
+                                            ),
+                                            crate::filters::sudoers(),
+                                            Duration::from_secs(timeout),
+                                        )
+                                        .await
+                                        .unwrap()
+                                    {
+                                        (sent, Some(response)) => {
+                                            let alias = response.text();
+
+                                            if alias.len() < 3 {
+                                                sent.edit(InputMessage::html(
+                                                    t("alias_too_short").replace("{min}", "3"),
+                                                ))
+                                                .await?;
+                                            } else if alias.len() > 15 {
+                                                sent.edit(InputMessage::html(
+                                                    t("alias_too_long").replace("{max}", "15"),
+                                                ))
+                                                .await?;
+                                            } else {
+                                                if character.aliases.iter().any(|a| alias == a) {
+                                                    sent.edit(InputMessage::html(t(
+                                                        "alias_already_exists",
+                                                    )))
+                                                    .await?;
+                                                } else {
+                                                    character
+                                                        .aliases
+                                                        .push(alias.trim().to_string());
+                                                    buttons.push(vec![button::inline(
+                                                        alias,
+                                                        format!(
+                                                            "char edit {0} aliases edit {1}",
+                                                            character_id,
+                                                            character.aliases.len() - 1
+                                                        ),
+                                                    )]);
+
+                                                    match Character::update_by_id(
+                                                        conn,
+                                                        &character,
+                                                        character_id,
+                                                    )
+                                                    .await
+                                                    {
+                                                        Ok(_) => {
+                                                            sent.edit(InputMessage::html(
+                                                                t("field_updated").replace(
+                                                                    "{field}",
+                                                                    &field.to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+                                                        }
+                                                        Err(_) => {
+                                                            sent.edit(InputMessage::html(
+                                                                t("error_occurred").replace(
+                                                                    "{field}",
+                                                                    &field.to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+                                            let _ = response.delete().await;
+                                        }
+                                        (sent, None) => {
+                                            sent.edit(InputMessage::html(
+                                                t("operation_cancelled")
+                                                    .replace("{reason}", &t("timeout")),
+                                            ))
+                                            .await?;
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+                                "edit" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        if let Some(buttons) = buttons.get_mut(index) {
+                                            *buttons = vec![
+                                                button::inline(
+                                                    t("rename_button"),
+                                                    format!(
+                                                        "char edit {0} aliases rename {1}",
+                                                        character_id, index
+                                                    ),
+                                                ),
+                                                button::inline(
+                                                    t("cancel_button"),
+                                                    format!("char edit {0} aliases", character_id),
+                                                ),
+                                                button::inline(
+                                                    t("delete_button"),
+                                                    format!(
+                                                        "char edit {0} aliases delete {1}",
+                                                        character_id, index
+                                                    ),
+                                                ),
+                                            ];
+                                        };
+                                    }
+                                }
+                                "delete" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        if let Some(alias) = character.aliases.get(index) {
+                                            if splitted.len() == 7
+                                                && splitted[6].as_str() == "confirm"
+                                            {
+                                                buttons.remove(index);
+                                                character.aliases.remove(index);
+
+                                                match Character::update_by_id(
+                                                    conn,
+                                                    &character,
+                                                    character_id,
+                                                )
+                                                .await
+                                                {
+                                                    Ok(_) => {}
+                                                    Err(_) => {
+                                                        let sent = message
+                                                            .reply(InputMessage::html(
+                                                                t("error_occurred").replace(
+                                                                    "{field}",
+                                                                    &t("aliases").to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+
+                                                        tokio::time::sleep(Duration::from_secs(2))
+                                                            .await;
+                                                        sent.delete().await?;
+                                                    }
+                                                }
+                                            } else {
+                                                message
+                                                .edit(
+                                                    InputMessage::html(
+                                                        t("confirm_delete")
+                                                            .replace(
+                                                                "{object}",
+                                                                &t("alias").to_lowercase(),
+                                                            )
+                                                            .replace("{id}", alias),
+                                                    )
+                                                    .reply_markup(&reply_markup::inline(vec![
+                                                        vec![
+                                                            button::inline(
+                                                                t("cancel_button"),
+                                                                format!("char edit {0} aliases", character_id),
+                                                            ),
+                                                            button::inline(
+                                                                t("confirm_button"),
+                                                                format!("char edit {0} aliases delete {1} confirm", character_id, index),
+                                                            ),
+                                                        ],
+                                                    ])),
+                                                )
+                                                .await?;
+
+                                                return Ok(());
+                                            }
+                                        }
+                                    }
+                                }
+                                "rename" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        let field = t("alias");
+                                        let timeout = 10;
+
+                                        match conv
+                                            .ask_message(
+                                                chat,
+                                                sender,
+                                                InputMessage::html(
+                                                    t("ask_field")
+                                                        .replace("{field}", &field)
+                                                        .replace("{timeout}", &timeout.to_string()),
+                                                ),
+                                                crate::filters::sudoers(),
+                                                Duration::from_secs(timeout),
+                                            )
+                                            .await
+                                            .unwrap()
+                                        {
+                                            (sent, Some(response)) => {
+                                                let alias = response.text();
+
+                                                if alias.len() < 3 {
+                                                    sent.edit(InputMessage::html(
+                                                        t("alias_too_short").replace("{min}", "3"),
+                                                    ))
+                                                    .await?;
+                                                } else if alias.len() > 15 {
+                                                    sent.edit(InputMessage::html(
+                                                        t("alias_too_long").replace("{max}", "15"),
+                                                    ))
+                                                    .await?;
+                                                } else {
+                                                    if character
+                                                        .clone()
+                                                        .aliases
+                                                        .iter()
+                                                        .any(|a| alias == a)
+                                                    {
+                                                        sent.edit(InputMessage::html(t(
+                                                            "alias_already_exists",
+                                                        )))
+                                                        .await?;
+                                                    } else {
+                                                        if let Some(current_alias) =
+                                                            character.aliases.get_mut(index)
+                                                        {
+                                                            *current_alias =
+                                                                alias.trim().to_string();
+                                                            if let Some(buttons) =
+                                                                buttons.get_mut(index)
+                                                            {
+                                                                *buttons = vec![button::inline(
+                                                                alias,
+                                                                format!(
+                                                                    "char edit {0} aliases edit {1}",
+                                                                    character_id, index
+                                                                ),
+                                                            )];
+                                                            }
+
+                                                            match Character::update_by_id(
+                                                                conn,
+                                                                &character,
+                                                                character_id,
+                                                            )
+                                                            .await
+                                                            {
+                                                                Ok(_) => {
+                                                                    sent.edit(InputMessage::html(
+                                                                        t("field_updated").replace(
+                                                                            "{field}",
+                                                                            &field.to_lowercase(),
+                                                                        ),
+                                                                    ))
+                                                                    .await?;
+                                                                }
+                                                                Err(_) => {
+                                                                    sent.edit(InputMessage::html(
+                                                                        t("error_occurred")
+                                                                            .replace(
+                                                                                "{field}",
+                                                                                &field
+                                                                                    .to_lowercase(),
+                                                                            ),
+                                                                    ))
+                                                                    .await?;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                                sent.delete().await?;
+                                                let _ = response.delete().await;
+                                            }
+                                            (sent, None) => {
+                                                sent.edit(InputMessage::html(
+                                                    t("operation_cancelled")
+                                                        .replace("{reason}", &t("timeout")),
+                                                ))
+                                                .await?;
+
+                                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                                sent.delete().await?;
+
+                                                return Ok(());
+                                            }
+                                        }
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+
+                        buttons.extend(vec![
+                            vec![button::inline(
+                                t("add_button"),
+                                format!("char edit {} aliases add", character_id),
+                            )],
+                            vec![button::inline(
+                                t("back_button"),
+                                format!("char edit {}", character_id),
+                            )],
+                        ]);
+
+                        message
+                            .edit(
+                                InputMessage::html(t("select_button"))
+                                    .reply_markup(&reply_markup::inline(buttons)),
+                            )
+                            .await?;
+
+                        return Ok(());
                     }
                     "photo" => {
                         let field = t("photo");
@@ -717,7 +1067,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 }
             }
 
-            let fields = ["name", "artist", "photo", "gender", "stars"];
+            let fields = ["name", "artist", "aliases", "photo", "gender", "stars"];
             let buttons = fields
                 .iter()
                 .map(|field| {
