@@ -100,16 +100,16 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                 ))
                 .reply_markup(&reply_markup::inline(buttons));
 
-                let file = crate::utils::upload_photo(client, character.clone(), conn)
-                    .await?
-                    .unwrap();
                 match {
-                    let input_message = input_message.clone().photo(file);
+                    let input_message = input_message.clone();
 
                     if query.is_some() {
                         message.edit(input_message).await.err()
                     } else {
-                        message.reply(input_message).await.err()
+                        let file = crate::utils::upload_photo(client, character.clone(), conn)
+                            .await?
+                            .unwrap();
+                        message.reply(input_message.photo(file)).await.err()
                     }
                 } {
                     Some(e) if e.is("FILE_PARTS_MISSING") || e.is("FILE_PARTS_INVALID") => {
