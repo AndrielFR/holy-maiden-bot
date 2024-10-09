@@ -77,10 +77,17 @@ async fn list_characters_individually(
                         {
                             let total = user_characters.characters_id.len();
 
-                            let caption = crate::utils::construct_character_info(
+                            let mut caption = crate::utils::construct_character_info(
                                 t("character_info"),
                                 &character,
-                            ) + &format!("\n🔖 {}/{}", index, total);
+                                character.liked_by.contains(&sender_id),
+                            );
+                            caption += &format!("\n🔖 {}/{}", index, total);
+
+                            if character.liked_by.contains(&sender_id) {
+                                // caption += "\n❤️";
+                            }
+
                             let mut buttons = Vec::new();
 
                             if index > 1 {
@@ -156,8 +163,11 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
 
             for character_id in user_characters.characters_id {
                 if let Some(character) = Character::select_by_id(conn, character_id).await? {
-                    let caption =
-                        crate::utils::construct_character_info(t("character_info"), &character);
+                    let caption = crate::utils::construct_character_info(
+                        t("character_info"),
+                        &character,
+                        character.liked_by.contains(&sender.id()),
+                    );
                     if let Some(file) = crate::utils::upload_photo(client, character, conn).await? {
                         medias.push(InputMedia::html(caption).photo(file));
                     }

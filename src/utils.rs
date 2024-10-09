@@ -31,8 +31,9 @@ pub fn escape_html(text: impl Into<String>) -> String {
         .replace("/", "&#x2F;")
 }
 
-pub fn construct_character_info(template: String, character: &Character) -> String {
+pub fn construct_character_info(template: String, character: &Character, liked: bool) -> String {
     let name = character.name.clone()
+        + if liked { " ❤" } else { "" }
         + &format!(
             " | 🎨 {}.",
             if !(character.image_link == "." || character.image_link == "0") {

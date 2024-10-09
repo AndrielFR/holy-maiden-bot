@@ -10,6 +10,7 @@ pub struct Character {
     pub gender: Gender,
     pub artist: String,
     pub aliases: Vec<String>,
+    pub liked_by: Vec<i64>,
     pub image_link: String,
 
     pub anilist_id: Option<i64>,

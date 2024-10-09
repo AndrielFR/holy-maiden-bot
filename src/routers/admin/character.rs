@@ -6,7 +6,6 @@ use grammers_friendly::prelude::*;
 use crate::{
     database::models::{Character, Gender},
     modules::{Conversation, Database, I18n},
-    utils::escape_html,
     Result,
 };
 
@@ -27,15 +26,6 @@ pub fn router() -> Router {
         .add_handler(Handler::callback_query(
             list_characters,
             filters::query("char list page:int").and(crate::filters::sudoers()),
-        ))
-        .add_handler(Handler::new_message(
-            see_character,
-            macros::command!("/!.", "char")
-                .or(macros::command!("character"))
-                .or(macros::command!("/!.", "c"))
-                .or(macros::command!("/!.", "perso"))
-                .or(macros::command!("personagem"))
-                .or(macros::command!("/!.", "p")),
         ))
 }
 
@@ -79,6 +69,8 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
                 id: last_id + 1,
                 name: name.trim().to_string(),
                 stars: 1,
+                artist: "Artist".to_string(),
+                image_link: ".".to_string(),
                 ..Default::default()
             };
             Character::insert(conn, &character).await?;
@@ -1087,6 +1079,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
             let mut input_message = InputMessage::html(crate::utils::construct_character_info(
                 t("character_info"),
                 &character,
+                character.liked_by.contains(&sender.id()),
             ));
 
             if let Some(file) = file {
@@ -1163,89 +1156,6 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
     //             + &t("page_info").replace("{current}", &current_page.to_string()),
     //     ))
     //     .await?;
-
-    Ok(())
-}
-
-async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
-    let mut db = data.get_module::<Database>().unwrap();
-    let i18n = data.get_module::<I18n>().unwrap();
-
-    let t = |key| i18n.get(key);
-
-    let message = update.get_message().unwrap();
-
-    let splitted = message.text().split_whitespace().collect::<Vec<_>>();
-
-    let conn = db.get_conn();
-
-    if splitted.len() == 1 {
-        if crate::filters::sudoers().is_ok(client, update).await {
-            message
-                .reply(
-                    InputMessage::html(t("select_button")).reply_markup(&reply_markup::inline(
-                        vec![vec![
-                            button::inline(t("add_button"), format!("char add")),
-                            button::inline(t("list_button"), format!("char list 1")),
-                        ]],
-                    )),
-                )
-                .await?;
-        } else {
-            message
-                .reply(InputMessage::html(t("invalid_command").replace(
-                    "{cmd}",
-                    &escape_html(format!("{} <name|id>", splitted[0])),
-                )))
-                .await?;
-        }
-    } else {
-        if let Some(character_id) = match splitted[1].parse::<i64>() {
-            Ok(id) => Some(id),
-            Err(_) => {
-                if let Some(character) = Character::select_by_name(conn, splitted[1]).await? {
-                    Some(character.id)
-                } else {
-                    None
-                }
-            }
-        } {
-            if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
-                let mut input_message = InputMessage::html(crate::utils::construct_character_info(
-                    t("character_info"),
-                    &character,
-                ));
-
-                if crate::filters::sudoers().is_ok(client, update).await {
-                    input_message = input_message.reply_markup(&reply_markup::inline(vec![vec![
-                        button::inline(t("edit_button"), format!("char edit {}", character_id)),
-                        button::inline(t("delete_button"), format!("char delete {}", character_id)),
-                    ]]));
-                }
-
-                let file = crate::utils::upload_photo(client, character.clone(), conn)
-                    .await?
-                    .unwrap();
-                match message.reply(input_message.clone().photo(file)).await {
-                    Err(e) if e.is("FILE_PARTS_MISSING") || e.is("FILE_PARTS_INVALID") => {
-                        character.image = None;
-                        Character::update_by_id(conn, &character, character_id).await?;
-
-                        message.reply(input_message).await?;
-                    }
-                    Ok(_) | Err(_) => {}
-                }
-            } else {
-                message
-                    .reply(InputMessage::html(t("unknown_character")))
-                    .await?;
-            }
-        } else {
-            message
-                .reply(InputMessage::html(t("unknown_character")))
-                .await?;
-        }
-    }
 
     Ok(())
 }

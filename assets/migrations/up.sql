@@ -4,9 +4,10 @@ CREATE TABLE "characters" (
 	"image"	TEXT,
 	"stars"	INTEGER NOT NULL DEFAULT 1,
 	"gender"	TEXT NOT NULL,
-	"artist"	TEXT NOT NULL DEFAULT 'Artist',
+	"artist"	TEXT DEFAULT 'Artist',
 	"aliases"	TEXT NOT NULL DEFAULT '[]',
-	"image_link"	TEXT NOT NULL DEFAULT '.',
+	"liked_by"	INTEGER NOT NULL DEFAULT '[]',
+	"image_link"	TEXT DEFAULT '.',
 	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
