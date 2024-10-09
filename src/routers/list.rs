@@ -83,8 +83,11 @@ async fn list_characters_individually(
                                 buttons.push(button::inline("➡", format!("list {}", index + 1)));
                             }
 
-                            let mut input_message = InputMessage::html(caption)
-                                .reply_markup(&reply_markup::inline(vec![buttons]));
+                            let mut input_message = InputMessage::html(caption);
+                            if buttons.len() > 1 {
+                                input_message = input_message
+                                    .reply_markup(&reply_markup::inline(vec![buttons]));
+                            }
 
                             if let Some(file) =
                                 crate::utils::upload_photo(client, character, conn).await?
