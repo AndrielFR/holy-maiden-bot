@@ -84,7 +84,7 @@ async fn list_characters_individually(
                             }
 
                             let mut input_message = InputMessage::html(caption);
-                            if buttons.len() > 1 {
+                            if buttons.len() >= 1 {
                                 input_message = input_message
                                     .reply_markup(&reply_markup::inline(vec![buttons]));
                             }
