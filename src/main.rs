@@ -1,4 +1,6 @@
-use grammers_client::{session::Session, Client, Config, InitParams};
+use std::{ops::ControlFlow, time::Duration};
+
+use grammers_client::{session::Session, Client, Config, InitParams, ReconnectionPolicy};
 use grammers_friendly::prelude::*;
 use holy_maiden_bot::{
     middlewares::{SaveChat, SetLocale},
@@ -27,6 +29,7 @@ async fn main() -> Result<()> {
         api_hash: config.telegram.api_hash,
         params: InitParams {
             catch_up: config.bot.catch_up,
+            reconnection_policy: &AutoReconnectPolicy,
             flood_sleep_threshold: config.bot.flood_sleep_threshold,
             ..Default::default()
         },
@@ -63,4 +66,14 @@ async fn main() -> Result<()> {
     log::info!("session saved");
 
     Ok(())
+}
+
+struct AutoReconnectPolicy;
+
+impl ReconnectionPolicy for AutoReconnectPolicy {
+    fn should_retry(&self, attempts: usize) -> ControlFlow<(), Duration> {
+        let duration = u64::pow(2, attempts as _);
+        log::info!("reconnecting in {} seconds", duration);
+        ControlFlow::Continue(Duration::from_millis(duration))
+    }
 }
