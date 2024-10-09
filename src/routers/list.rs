@@ -50,6 +50,7 @@ async fn list_characters_individually(
             }
             Chat::Group(group) => {
                 let conn = db.get_conn();
+                let sender_id = sender.id();
 
                 if let Some(user_characters) =
                     UserCharacters::select_by_id(conn, sender.id(), group.id()).await?
@@ -58,7 +59,13 @@ async fn list_characters_individually(
                         if let Some(ref query) = query {
                             let splitted = utils::split_query(query.data());
 
-                            splitted[1].parse::<usize>().unwrap_or(1)
+                            if let Ok(user_id) = splitted[1].parse::<i64>() {
+                                if user_id != sender_id {
+                                    return Ok(());
+                                }
+                            }
+
+                            splitted[2].parse::<usize>().unwrap_or(1)
                         } else {
                             1
                         }
@@ -77,10 +84,16 @@ async fn list_characters_individually(
                             let mut buttons = Vec::new();
 
                             if index > 1 {
-                                buttons.push(button::inline("⬅", format!("list {}", index - 1)));
+                                buttons.push(button::inline(
+                                    "⬅",
+                                    format!("list {0} {1}", sender_id, index - 1),
+                                ));
                             }
                             if index < total {
-                                buttons.push(button::inline("➡", format!("list {}", index + 1)));
+                                buttons.push(button::inline(
+                                    "➡",
+                                    format!("list {0} {1}", sender_id, index + 1),
+                                ));
                             }
 
                             let mut input_message = InputMessage::html(caption);
