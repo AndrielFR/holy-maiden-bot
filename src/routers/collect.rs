@@ -98,7 +98,7 @@ async fn collect_character(
                                     if characters.contains(&character.id) {
                                         text = t("has_character");
                                     } else if characters.len() == 9 {
-                                        let timeout = 5;
+                                        let timeout = 10;
 
                                         let sent = message
                                             .reply(
