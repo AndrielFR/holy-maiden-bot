@@ -37,12 +37,6 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         update.get_message().unwrap()
     };
 
-    let sender = if let Some(ref query) = query {
-        Some(query.sender().clone())
-    } else {
-        message.sender()
-    };
-
     let splitted = if let Some(ref query) = query {
         utils::split_query(query.data())
     } else {
@@ -102,11 +96,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                 let input_message = InputMessage::html(crate::utils::construct_character_info(
                     t("character_info"),
                     &character,
-                    if let Some(sender) = sender {
-                        character.liked_by.contains(&sender.id())
-                    } else {
-                        false
-                    },
+                    false,
                 ))
                 .reply_markup(&reply_markup::inline(buttons));
 
