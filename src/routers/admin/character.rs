@@ -4,7 +4,7 @@ use grammers_client::{button, reply_markup, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::{Character, Gender},
+    database::models::{Character, Gender, Series},
     modules::{Conversation, Database, I18n},
     Result,
 };
@@ -86,9 +86,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
 
             message
                 .edit(InputMessage::html(crate::utils::construct_character_info(
-                    t("character_info"),
-                    &character,
-                    false,
+                    &character, false, None,
                 )))
                 .await?;
 
@@ -279,9 +277,9 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                         message
                             .edit(
                                 InputMessage::html(crate::utils::construct_character_info(
-                                    t("character_info"),
                                     &character,
                                     character.liked_by.contains(&sender.id()),
+                                    Series::select_by_id(conn, character.series_id).await?,
                                 ))
                                 .reply_markup(
                                     &reply_markup::inline(vec![vec![
@@ -1042,11 +1040,84 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             None => {}
                         }
                     }
+                    "series" => {
+                        let field = t("series_id");
+                        let timeout = 15;
+
+                        match conv
+                            .ask_message(
+                                chat,
+                                sender,
+                                InputMessage::html(
+                                    t("ask_field")
+                                        .replace("{field}", &field)
+                                        .replace("{timeout}", &timeout.to_string()),
+                                ),
+                                crate::filters::sudoers(),
+                                Duration::from_secs(timeout),
+                            )
+                            .await
+                            .unwrap()
+                        {
+                            (sent, Some(response)) => {
+                                let new_series_id = response.text().trim();
+                                if let Ok(new_series_id) = new_series_id.parse::<i64>() {
+                                    if Series::select_by_id(conn, new_series_id).await?.is_some() {
+                                        character.series_id = new_series_id;
+
+                                        match Character::update_by_id(
+                                            conn,
+                                            &character,
+                                            character_id,
+                                        )
+                                        .await
+                                        {
+                                            Ok(_) => {
+                                                sent.edit(InputMessage::html(
+                                                    t("field_updated")
+                                                        .replace("{field}", &field.to_lowercase()),
+                                                ))
+                                                .await?;
+                                            }
+                                            Err(_) => {
+                                                sent.edit(InputMessage::html(
+                                                    t("error_occurred")
+                                                        .replace("{field}", &field.to_lowercase()),
+                                                ))
+                                                .await?;
+                                            }
+                                        }
+                                    } else {
+                                        sent.edit(InputMessage::html(t("invalid_id"))).await?;
+                                    }
+                                } else {
+                                    sent.edit(InputMessage::html(t("not_a_id"))).await?;
+                                }
+
+                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                sent.delete().await?;
+                                let _ = response.delete().await;
+                            }
+                            (sent, None) => {
+                                sent.edit(InputMessage::html(
+                                    t("operation_cancelled").replace("{reason}", &t("timeout")),
+                                ))
+                                .await?;
+
+                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                sent.delete().await?;
+
+                                return Ok(());
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }
 
-            let fields = ["name", "artist", "aliases", "photo", "gender", "stars"];
+            let fields = [
+                "name", "artist", "aliases", "photo", "gender", "stars", "series",
+            ];
             let buttons = fields
                 .into_iter()
                 .map(|field| {
@@ -1064,9 +1135,9 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
             )]);
 
             let mut input_message = InputMessage::html(crate::utils::construct_character_info(
-                t("character_info"),
                 &character,
                 character.liked_by.contains(&sender.id()),
+                Series::select_by_id(conn, character.series_id).await?,
             ));
 
             if let Some(file) = file {

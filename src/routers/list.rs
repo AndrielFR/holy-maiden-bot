@@ -4,7 +4,7 @@ use grammers_client::{
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::{Character, UserCharacters},
+    database::models::{Character, Series, UserCharacters},
     modules::{Database, I18n},
     Result,
 };
@@ -78,15 +78,11 @@ async fn list_characters_individually(
                             let total = user_characters.characters_id.len();
 
                             let mut caption = crate::utils::construct_character_info(
-                                t("character_info"),
                                 &character,
                                 character.liked_by.contains(&sender_id),
+                                Series::select_by_id(conn, character.series_id).await?,
                             );
-                            caption += &format!("\n🔖 {}/{}", index, total);
-
-                            if character.liked_by.contains(&sender_id) {
-                                // caption += "\n❤️";
-                            }
+                            caption += &format!("\n🔖 | {}/{}", index, total);
 
                             let mut buttons = Vec::new();
 
@@ -164,9 +160,9 @@ async fn list_characters(client: &mut Client, update: &mut Update, data: &mut Da
             for character_id in user_characters.characters_id {
                 if let Some(character) = Character::select_by_id(conn, character_id).await? {
                     let caption = crate::utils::construct_character_info(
-                        t("character_info"),
                         &character,
                         character.liked_by.contains(&sender.id()),
+                        Series::select_by_id(conn, character.series_id).await?,
                     );
                     if let Some(file) = crate::utils::upload_photo(client, character, conn).await? {
                         medias.push(InputMedia::html(caption).photo(file));

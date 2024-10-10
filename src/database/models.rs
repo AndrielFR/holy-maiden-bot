@@ -11,6 +11,7 @@ pub struct Character {
     pub artist: String,
     pub aliases: Vec<String>,
     pub liked_by: Vec<i64>,
+    pub series_id: i64,
     pub image_link: String,
 
     pub anilist_id: Option<i64>,
@@ -21,7 +22,9 @@ impl_delete!(Character { delete_by_id(id: i64) => "`where id = #{id}`" }, "chara
 impl_update!(Character { update_by_id(id: i64) => "`where id = #{id}`" }, "characters");
 impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} limit 1`" }, "characters");
 impl_select!(Character { select_by_name(name: &str) -> Option => "`where name like #{'%' + name + '%'} or aliases like #{'%' + name + '%'} limit 1`" }, "characters");
-impl_select!(Character { select_page(page: u16, limit: u16) => "`offset #{(page - 1) * limit} limit #{limit}`" }, "characters");
+impl_select!(Character { select_by_series(series_id: i64) -> Vec => "`where series_id = #{series_id}`" }, "characters");
+impl_select!(Character { select_page(page: u16, limit: u16) => "`limit #{limit} offset #{(page - 1) * limit}`" }, "characters");
+impl_select!(Character { select_page_by_series(series_id: i64, page: u16, limit: u16) -> Vec => "`where series_id = #{series_id} limit #{limit} offset #{(page - 1) * limit}`" }, "characters");
 impl_select!(Character { select_last() -> Option => "`order by id desc limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");
 
@@ -53,7 +56,7 @@ impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => 
 impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "group_characters");
 impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "group_characters");
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct Series {
     pub id: i64,
     pub title: String,
@@ -148,7 +151,7 @@ impl std::fmt::Display for Gender {
     }
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Media {
     Anime,

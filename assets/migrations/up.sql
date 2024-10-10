@@ -7,6 +7,7 @@ CREATE TABLE "characters" (
 	"artist"	TEXT DEFAULT 'Artist',
 	"aliases"	TEXT NOT NULL DEFAULT '[]',
 	"liked_by"	TEXT NOT NULL DEFAULT '[]',
+	"series_id"	INTEGER NOT NULL DEFAULT 0,
 	"image_link"	TEXT DEFAULT '.',
 	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)

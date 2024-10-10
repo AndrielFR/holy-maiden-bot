@@ -82,13 +82,11 @@ async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) 
 
             message
                 .edit(
-                    InputMessage::html(crate::utils::construct_series_info(
-                        t("series_info"),
-                        &series,
-                    ))
-                    .reply_markup(&reply_markup::inline(vec![vec![
-                        button::inline(t("continue_button"), format!("series edit {}", series.id)),
-                    ]])),
+                    InputMessage::html(crate::utils::construct_series_info(&series, None))
+                        .reply_markup(&reply_markup::inline(vec![vec![button::inline(
+                            t("continue_button"),
+                            format!("series edit {}", series.id),
+                        )]])),
                 )
                 .await?;
         }
@@ -193,8 +191,7 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
                         message
                             .edit(
                                 InputMessage::html(crate::utils::construct_series_info(
-                                    t("series_info"),
-                                    &series,
+                                    &series, None,
                                 ))
                                 .reply_markup(
                                     &reply_markup::inline(vec![vec![
@@ -354,11 +351,8 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
 
             message
                 .edit(
-                    InputMessage::html(crate::utils::construct_series_info(
-                        t("series_info"),
-                        &series,
-                    ))
-                    .reply_markup(&reply_markup::inline(buttons)),
+                    InputMessage::html(crate::utils::construct_series_info(&series, None))
+                        .reply_markup(&reply_markup::inline(buttons)),
                 )
                 .await?;
         }

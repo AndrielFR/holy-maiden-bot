@@ -9,7 +9,7 @@
     "yes_button": "Yes ✔️",
     "back_button": "Back 🔙",
     "edit_button": "Edit ✏",
-    "game_button": "Game 🎮",
+    "game_button": "Game 🧩",
     "list_button": "List 📋",
     "anime_button": "Anime 📺",
     "manga_button": "Manga 📚",
@@ -23,7 +23,7 @@
     "unknown_button": "Unknown ❓",
     "continue_button": "Continue ➡️",
     "light_novel_button": "Light Novel 📖",
-    "visual_novel_button": "Visual Novel 🎮",
+    "visual_novel_button": "Visual Novel 🧩",
 
     "male_button": "Male ♂",
     "female_button": "Female ♀",
@@ -41,6 +41,7 @@
     "aliases": "Aliases",
     "timeout": "Timeout",
     "character": "Character",
+    "series_id": "Series ID",
     "characters": "Characters",
     "image_link": "Image link",
     "media_type": "Media type",
@@ -62,6 +63,8 @@
 
     "not_a_group": "This command can only be used in groups.",
 
+    "not_a_id": "🤔 — That's not an ID. Try again.",
+    "invalid_id": "🤔 — The ID you entered is invalid. Try again.",
     "invalid_command": "🤨 — Command used in the <b>wrong</b> way.\n\nTry: <code>{cmd}</code>",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
@@ -74,7 +77,6 @@
     "new_character": "🎰 <b>A mysterious character appears...!</b>\n\n🔥 — Reply to this message with the character's name to collect it.",
     "no_characters": "Oops! You haven't collected any characters yet in this group. Go get one to use this feature. 🔙",
     "has_character": "🤚 You already have this character in this group.",
-    "character_info": "{gender} <code>{id}</code>. <b>{name}</b>\n\n⭐: {bubble}",
     "max_characters": "You have reached the maximum number of characters you can collect. ⛔\nWould you like to exchange any for this one? ♻\n\n<i>You have <code>{timeout}</code><b>s</b> to decide</i>.",
     "not_a_character": "This is not a valid character. ⁉️",
     "wrong_character": "⚠️ — <b>Oops!</b> The character's name isn't this, try again.",
@@ -85,6 +87,5 @@
     "unknown_character": "🤔 — I couldn't find that character. Try again.",
     "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥",
 
-    "series_info": "<code>{id}</code>. <b>{title}</b>\n<i>{media_type}</i>",
     "unknown_series": "🤔 — I couldn't find that series. Try again."
 }

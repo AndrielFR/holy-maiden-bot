@@ -9,6 +9,7 @@
     "yes_button": "Sim ✔️",
     "back_button": "Voltar 🔙",
     "edit_button": "Editar ✏",
+    "game_button": "Jogo 🧩",
     "list_button": "Listar 📋",
     "cancel_button": "Cancelar ❌",
     "delete_button": "Excluir ❌",
@@ -32,6 +33,7 @@
     "aliases": "Apelidos",
     "timeout": "Tempo esgotado",
     "character": "Personagem",
+    "series_id": "ID da série",
     "characters": "Personagens",
     "image_link": "Link da imagem",
     "media_type": "Tipo de mídia",
@@ -53,6 +55,8 @@
 
     "not_a_group": "Este comando só pode ser usado em grupos.",
 
+    "not_a_id": "🤔 — Isso não é um ID. Tente novamente.",
+    "invalid_id": "🤔 — O ID que você me enviou é inválido. Tente novamente.",
     "invalid_command": "🤨 — Comando utilizado da maneira <b>errada</b>.\n\nTente: <code>{cmd}</code>",
 
     "start": "<b>Olá!</b> Eu sou um bot que pode te ajudar a <details>coletar</details> waifus ou husbandos de <u>vários</u> animes.\n\nPara começar, digite /help",

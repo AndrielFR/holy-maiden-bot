@@ -2,7 +2,7 @@ use grammers_client::{button, reply_markup, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::Character,
+    database::models::{Character, Series},
     modules::{Database, I18n},
     Result,
 };
@@ -94,9 +94,9 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
             }
 
             let input_message = InputMessage::html(crate::utils::construct_character_info(
-                t("character_info"),
                 &character,
                 false,
+                Series::select_by_id(conn, character.series_id).await?,
             ))
             .reply_markup(&reply_markup::inline(buttons));
 
