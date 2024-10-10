@@ -69,6 +69,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         }
     } else {
         let conn = db.get_conn();
+        let is_like = splitted[0] == "like";
 
         if let Some(character_id) = match splitted[1].parse::<i64>() {
             Ok(id) => Some(id),
@@ -86,7 +87,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                     format!("like {}", character_id),
                 )]];
 
-                if crate::filters::sudoers().is_ok(client, update).await {
+                if !is_like && crate::filters::sudoers().is_ok(client, update).await {
                     buttons.push(vec![
                         button::inline(t("edit_button"), format!("char edit {}", character_id)),
                         button::inline(t("delete_button"), format!("char delete {}", character_id)),
