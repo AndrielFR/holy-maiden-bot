@@ -86,7 +86,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
 
             message
                 .edit(InputMessage::html(crate::utils::construct_character_info(
-                    &character, false, None,
+                    &character, None,
                 )))
                 .await?;
 
@@ -278,7 +278,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                             .edit(
                                 InputMessage::html(crate::utils::construct_character_info(
                                     &character,
-                                    character.liked_by.contains(&sender.id()),
                                     Series::select_by_id(conn, character.series_id).await?,
                                 ))
                                 .reply_markup(
@@ -1136,7 +1135,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
             let mut input_message = InputMessage::html(crate::utils::construct_character_info(
                 &character,
-                character.liked_by.contains(&sender.id()),
                 Series::select_by_id(conn, character.series_id).await?,
             ));
 

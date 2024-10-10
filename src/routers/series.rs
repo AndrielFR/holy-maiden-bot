@@ -85,9 +85,13 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 }
             }
         } {
+            let char_per_page = 15;
+
             let mut file = None;
             let mut index = 1;
-            let total = Character::select_by_series(conn, series.id).await?.len();
+            let total = ((Character::select_by_series(conn, series.id).await?.len() as f64)
+                / (char_per_page as f64))
+                .ceil() as usize;
             let mut buttons = Vec::new();
 
             if splitted.len() > 2 {
@@ -104,16 +108,19 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
             let mut caption = String::new();
 
-            if let Some(character) =
-                Character::select_page_by_series(conn, series.id, index as u16, 1)
-                    .await?
-                    .first()
-            {
-                if query.is_none() {
-                    file = crate::utils::upload_photo(client, character.clone(), conn).await?;
-                }
+            let characters =
+                Character::select_page_by_series(conn, series.id, index as u16, char_per_page)
+                    .await?;
+            for (num, character) in characters.iter().enumerate() {
+                if num == 0 {
+                    if !is_like {
+                        file = crate::utils::upload_photo(client, character.clone(), conn).await?;
+                    }
 
-                caption = crate::utils::construct_series_info(&series, Some(&character));
+                    caption = crate::utils::construct_series_info(&series, Some(character));
+                } else {
+                    caption += &crate::utils::construct_character_partial_info(&character);
+                }
             }
 
             if index > 1 {

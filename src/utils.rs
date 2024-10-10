@@ -31,40 +31,11 @@ pub fn escape_html(text: impl Into<String>) -> String {
         .replace("/", "&#x2F;")
 }
 
-pub fn construct_character_info(
-    character: &Character,
-    is_liked: bool,
-    series: Option<Series>,
-) -> String {
-    let template = String::from(
-        "{gender} <code>{id}</code>. <b>{name}</b>\n{series_type} <i>{series_title}</i>\n\n⭐: {bubble}",
-    );
-
-    let name = character.name.clone()
-        + if is_liked { " ❤" } else { "" }
-        + &format!(
-            " | 🎨 {}.",
-            if !(character.image_link == "." || character.image_link == "0") {
-                format!(
-                    "<a href='{0}'>{1}</a>",
-                    character.image_link, character.artist
-                )
-            } else {
-                character.artist.clone()
-            }
-        );
+pub fn construct_character_info(character: &Character, series: Option<Series>) -> String {
+    let template = construct_character_partial_info(character)
+        + "{series_type} <i>{series_title}</i>\n\n⭐: {bubble}";
 
     template
-        .replace("{id}", &character.id.to_string())
-        .replace(
-            "{gender}",
-            match character.gender {
-                Gender::Male => "💥",
-                Gender::Female => "🌸",
-                Gender::Other => "🍃",
-            },
-        )
-        .replace("{name}", &name)
         .replace(
             "{series_title}",
             &match series {
@@ -92,55 +63,48 @@ pub fn construct_character_info(
         )
 }
 
+pub fn construct_character_partial_info(character: &Character) -> String {
+    let template = String::from("{gender} <code>{id}</code>. <b>{name}</b>\n");
+
+    let name = character.name.clone()
+        + &format!(
+            " | 🎨 {}.",
+            if !(character.image_link == "." || character.image_link == "0") {
+                format!(
+                    "<a href='{0}'>{1}</a>",
+                    character.image_link, character.artist
+                )
+            } else {
+                character.artist.clone()
+            }
+        );
+
+    template
+        .replace("{id}", &character.id.to_string())
+        .replace(
+            "{gender}",
+            match character.gender {
+                Gender::Male => "💥",
+                Gender::Female => "🌸",
+                Gender::Other => "🍃",
+            },
+        )
+        .replace("{name}", &name)
+}
+
 pub fn construct_series_info(series: &Series, character: Option<&Character>) -> String {
-    let template = String::from(
-        "<code>{id}</code>. <b>{title}</b>\n{emoji} <i>{media_type}</i>\n\n{char_gender} <code>{char_id}</code> <b>{char_name}</b>",
-    );
+    let mut template =
+        String::from("<code>{id}</code>. <b>{title}</b>\n{emoji} <i>{media_type}</i>\n\n");
+
+    if let Some(character) = character {
+        template += &construct_character_partial_info(character);
+    }
 
     template
         .replace("{id}", &series.id.to_string())
         .replace("{title}", &series.title)
         .replace("{emoji}", media_type_symbol(&series.media_type))
         .replace("{media_type}", &series.media_type.to_string())
-        .replace(
-            "{char_gender}",
-            if let Some(character) = character {
-                match character.gender {
-                    Gender::Male => "💥",
-                    Gender::Female => "🌸",
-                    Gender::Other => "🍃",
-                }
-            } else {
-                ""
-            },
-        )
-        .replace(
-            "{char_id}",
-            &if let Some(character) = character {
-                format!("{}.", character.id.to_string())
-            } else {
-                String::new()
-            },
-        )
-        .replace(
-            "{char_name}",
-            &if let Some(character) = character {
-                character.name.clone()
-                    + &format!(
-                        " | 🎨 {}.",
-                        if !(character.image_link == "." || character.image_link == "0") {
-                            format!(
-                                "<a href='{0}'>{1}</a>",
-                                character.image_link, character.artist
-                            )
-                        } else {
-                            character.artist.clone()
-                        }
-                    )
-            } else {
-                String::new()
-            },
-        )
 }
 
 pub fn media_type_symbol(media: &Media) -> &str {

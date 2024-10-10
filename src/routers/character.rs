@@ -95,7 +95,6 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
 
             let input_message = InputMessage::html(crate::utils::construct_character_info(
                 &character,
-                false,
                 Series::select_by_id(conn, character.series_id).await?,
             ))
             .reply_markup(&reply_markup::inline(buttons));
