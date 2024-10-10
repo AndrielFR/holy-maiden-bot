@@ -20,6 +20,10 @@ pub fn router() -> Router {
             see_serie,
             filters::query("series id:int sender:int index:int"),
         ))
+        .add_handler(Handler::callback_query(
+            like_series,
+            filters::query("slike id:int"),
+        ))
 }
 
 async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
@@ -68,6 +72,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
         }
     } else {
         let conn = db.get_conn();
+        let is_like = splitted[0].contains("like");
         let sender_id = sender.id();
 
         if let Some(series) = match splitted[1].parse::<i64>() {
@@ -104,7 +109,10 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                     .await?
                     .first()
             {
-                file = crate::utils::upload_photo(client, character.clone(), conn).await?;
+                if query.is_none() {
+                    file = crate::utils::upload_photo(client, character.clone(), conn).await?;
+                }
+
                 caption = crate::utils::construct_series_info(&series, Some(&character));
             }
 
@@ -120,9 +128,15 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                     format!("series {0} {1} {2}", series.id, sender_id, index + 1),
                 ));
             }
-            let mut buttons = vec![buttons];
+            let mut buttons = vec![
+                buttons,
+                vec![button::inline(
+                    format!("❤ {}", series.liked_by.len()),
+                    format!("slike {}", series.id),
+                )],
+            ];
 
-            if crate::filters::sudoers().is_ok(client, update).await {
+            if !is_like && crate::filters::sudoers().is_ok(client, update).await {
                 buttons.push(vec![
                     button::inline(t("edit_button"), format!("series edit {}", series.id)),
                     button::inline(t("delete_button"), format!("series delete {}", series.id)),
@@ -154,4 +168,39 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
     }
 
     Ok(())
+}
+
+async fn like_series(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+
+    let query = update.get_query().unwrap();
+    let sender = query.sender();
+
+    let splitted = utils::split_query(query.data());
+
+    match splitted[1].parse::<i64>() {
+        Ok(id) => {
+            let conn = db.get_conn();
+            let sender_id = sender.id();
+
+            if let Some(mut series) = Series::select_by_id(conn, id).await? {
+                let mut liked_by = series.liked_by;
+
+                if liked_by.contains(&sender_id) {
+                    liked_by.retain(|id| *id != sender_id);
+                } else {
+                    liked_by.push(sender.id());
+                }
+
+                series.liked_by = liked_by;
+                match Series::update_by_id(conn, &series, series.id).await {
+                    Ok(_) => see_serie(client, update, data).await?,
+                    Err(_) => {}
+                }
+            }
+        }
+        Err(_) => {}
+    }
+
+    return Ok(());
 }

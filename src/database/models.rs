@@ -60,6 +60,7 @@ impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`wh
 pub struct Series {
     pub id: i64,
     pub title: String,
+    pub liked_by: Vec<i64>,
     pub media_type: Media,
 }
 

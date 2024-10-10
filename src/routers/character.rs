@@ -20,7 +20,7 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::callback_query(
             like_character,
-            filters::query("like id:int"),
+            filters::query("clike id:int"),
         ))
 }
 
@@ -69,7 +69,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         }
     } else {
         let conn = db.get_conn();
-        let is_like = splitted[0] == "like";
+        let is_like = splitted[0].contains("like");
 
         if let Some(mut character) = match splitted[1].parse::<i64>() {
             Ok(id) => Character::select_by_id(conn, id).await?,
@@ -83,7 +83,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         } {
             let mut buttons = vec![vec![button::inline(
                 format!("❤ {}", character.liked_by.len()),
-                format!("like {}", character.id),
+                format!("clike {}", character.id),
             )]];
 
             if !is_like && crate::filters::sudoers().is_ok(client, update).await {
