@@ -62,7 +62,7 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
 
             let last_id = Character::select_last(conn)
                 .await?
-                .map_or(1, |character| character.id);
+                .map_or(0, |character| character.id);
 
             let name = response.text();
             let mut character = Character {
@@ -85,30 +85,11 @@ async fn add_character(client: &mut Client, update: &mut Update, data: &mut Data
             let _ = response.delete().await;
 
             message
-                .edit(InputMessage::html(
-                    t("character_info")
-                        .replace("{id}", &character.id.to_string())
-                        .replace(
-                            "{gender}",
-                            match character.gender {
-                                Gender::Male => "💥",
-                                Gender::Female => "🌸",
-                                Gender::Other => "🍃",
-                            },
-                        )
-                        .replace("{name}", &character.name)
-                        .replace(
-                            "{bubble}",
-                            match character.stars {
-                                1 => "⚪",
-                                2 => "🟢",
-                                3 => "🔵",
-                                4 => "🟣",
-                                5 => "🔴",
-                                _ => "🟡",
-                            },
-                        ),
-                ))
+                .edit(InputMessage::html(crate::utils::construct_character_info(
+                    t("character_info"),
+                    &character,
+                    false,
+                )))
                 .await?;
 
             let field = t("photo");
@@ -283,7 +264,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
     let sender = query.sender();
     let message = query.load_message().await?;
 
-    let text = message.html_text();
     let splitted = utils::split_query(query.data());
 
     if splitted.len() >= 3 {
@@ -297,18 +277,25 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                 match splitted[3].as_str() {
                     "back" => {
                         message
-                            .edit(InputMessage::html(text).reply_markup(&reply_markup::inline(
-                                vec![vec![
-                                    button::inline(
-                                        t("edit_button"),
-                                        format!("char edit {}", character_id),
-                                    ),
-                                    button::inline(
-                                        t("delete_button"),
-                                        format!("char delete {}", character_id),
-                                    ),
-                                ]],
-                            )))
+                            .edit(
+                                InputMessage::html(crate::utils::construct_character_info(
+                                    t("character_info"),
+                                    &character,
+                                    character.liked_by.contains(&sender.id()),
+                                ))
+                                .reply_markup(
+                                    &reply_markup::inline(vec![vec![
+                                        button::inline(
+                                            t("edit_button"),
+                                            format!("char edit {}", character_id),
+                                        ),
+                                        button::inline(
+                                            t("delete_button"),
+                                            format!("char delete {}", character_id),
+                                        ),
+                                    ]]),
+                                ),
+                            )
                             .await?;
 
                         return Ok(());
@@ -1061,7 +1048,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
             let fields = ["name", "artist", "aliases", "photo", "gender", "stars"];
             let buttons = fields
-                .iter()
+                .into_iter()
                 .map(|field| {
                     button::inline(
                         t(field) + " ✏",

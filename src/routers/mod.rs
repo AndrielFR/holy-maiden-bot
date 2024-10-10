@@ -5,6 +5,7 @@ mod help;
 mod language;
 mod list;
 mod send_character;
+mod series;
 mod start;
 
 pub use admin::router as admin;
@@ -14,4 +15,5 @@ pub use help::router as help;
 pub use language::router as language;
 pub use list::router as list;
 pub use send_character::router as send_character;
+pub use series::router as series;
 pub use start::router as start;

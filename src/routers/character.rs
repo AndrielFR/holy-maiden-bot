@@ -71,64 +71,58 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         let conn = db.get_conn();
         let is_like = splitted[0] == "like";
 
-        if let Some(character_id) = match splitted[1].parse::<i64>() {
-            Ok(id) => Some(id),
+        if let Some(mut character) = match splitted[1].parse::<i64>() {
+            Ok(id) => Character::select_by_id(conn, id).await?,
             Err(_) => {
                 if let Some(character) = Character::select_by_name(conn, &splitted[1]).await? {
-                    Some(character.id)
+                    Some(character)
                 } else {
                     None
                 }
             }
         } {
-            if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
-                let mut buttons = vec![vec![button::inline(
-                    format!("❤ {}", character.liked_by.len()),
-                    format!("like {}", character_id),
-                )]];
+            let mut buttons = vec![vec![button::inline(
+                format!("❤ {}", character.liked_by.len()),
+                format!("like {}", character.id),
+            )]];
 
-                if !is_like && crate::filters::sudoers().is_ok(client, update).await {
-                    buttons.push(vec![
-                        button::inline(t("edit_button"), format!("char edit {}", character_id)),
-                        button::inline(t("delete_button"), format!("char delete {}", character_id)),
-                    ]);
+            if !is_like && crate::filters::sudoers().is_ok(client, update).await {
+                buttons.push(vec![
+                    button::inline(t("edit_button"), format!("char edit {}", character.id)),
+                    button::inline(t("delete_button"), format!("char delete {}", character.id)),
+                ]);
+            }
+
+            let input_message = InputMessage::html(crate::utils::construct_character_info(
+                t("character_info"),
+                &character,
+                false,
+            ))
+            .reply_markup(&reply_markup::inline(buttons));
+
+            match {
+                let input_message = input_message.clone();
+
+                if query.is_some() {
+                    message.edit(input_message).await.err()
+                } else {
+                    let file = crate::utils::upload_photo(client, character.clone(), conn)
+                        .await?
+                        .unwrap();
+                    message.reply(input_message.photo(file)).await.err()
                 }
-
-                let input_message = InputMessage::html(crate::utils::construct_character_info(
-                    t("character_info"),
-                    &character,
-                    false,
-                ))
-                .reply_markup(&reply_markup::inline(buttons));
-
-                match {
-                    let input_message = input_message.clone();
+            } {
+                Some(e) if e.is("FILE_PARTS_MISSING") || e.is("FILE_PARTS_INVALID") => {
+                    character.image = None;
+                    Character::update_by_id(conn, &character, character.id).await?;
 
                     if query.is_some() {
-                        message.edit(input_message).await.err()
+                        message.edit(input_message).await?;
                     } else {
-                        let file = crate::utils::upload_photo(client, character.clone(), conn)
-                            .await?
-                            .unwrap();
-                        message.reply(input_message.photo(file)).await.err()
+                        message.reply(input_message).await?;
                     }
-                } {
-                    Some(e) if e.is("FILE_PARTS_MISSING") || e.is("FILE_PARTS_INVALID") => {
-                        character.image = None;
-                        Character::update_by_id(conn, &character, character_id).await?;
-
-                        if query.is_some() {
-                            message.edit(input_message).await?;
-                        } else {
-                            message.reply(input_message).await?;
-                        }
-                    }
-                    Some(_) | None => {}
                 }
-            } else {
-                message
-                    .reply(InputMessage::html(t("unknown_character")))
-                    .await?;
+                Some(_) | None => {}
             }
         } else {
             message

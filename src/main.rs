@@ -54,6 +54,7 @@ async fn main() -> Result<()> {
         .add_router(routers::help())
         .add_router(routers::language())
         .add_router(routers::character())
+        .add_router(routers::series())
         .add_router(routers::list())
         .add_router(routers::collect())
         .add_router(routers::admin())

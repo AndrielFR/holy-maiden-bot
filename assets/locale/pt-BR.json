@@ -24,14 +24,17 @@
     "name": "Nome",
     "alias": "Apelido",
     "photo": "Foto",
+    "title": "Título",
     "stars": "Estrelas",
     "artist": "Artista",
+    "series": "Série",
     "gender": "Gênero",
     "aliases": "Apelidos",
     "timeout": "Tempo esgotado",
     "character": "Personagem",
     "characters": "Personagens",
     "image_link": "Link da imagem",
+    "media_type": "Tipo de mídia",
     "artist_name": "Nome do artista",
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até <code>{timeout}</code><b>s</b></i>.",
@@ -70,5 +73,7 @@
     "character_swapped": "🔄 — Você trocou <b>{old}</b> por <b>{new}</b> com sucesso.",
     "expired_character": "Esse personagem expirou ou já foi capturado. (❌)",
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
-    "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥"
+    "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥",
+
+    "unknown_series": "🤔 — Não consegui encontrar essa série. Tente novamente."
 }

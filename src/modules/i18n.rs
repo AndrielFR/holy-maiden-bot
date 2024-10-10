@@ -54,8 +54,10 @@ impl I18n {
         i18n
     }
 
-    pub fn get(&self, key: &str) -> String {
-        self.get_from_locale(&self.locale(), key)
+    pub fn get(&self, key: impl Into<String>) -> String {
+        let key = key.into();
+
+        self.get_from_locale(&self.locale(), &key)
     }
 
     pub fn get_from_locale(&self, locale: &str, key: &str) -> String {

@@ -29,6 +29,13 @@ CREATE TABLE "group_characters" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
+CREATE TABLE "series" (
+	"id"	INTEGER NOT NULL,
+	"title"	TEXT NOT NULL,
+	"media_type"	TEXT NOT NULL DEFAULT 'unknown',
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
 CREATE TABLE "users" (
 	"id"	INTEGER UNIQUE,
 	"username"	TEXT UNIQUE,

@@ -7,7 +7,7 @@ use grammers_client::{
 use rbatis::RBatis;
 
 use crate::{
-    database::models::{Character, Gender},
+    database::models::{Character, Gender, Series},
     Result,
 };
 
@@ -69,6 +69,13 @@ pub fn construct_character_info(template: String, character: &Character, liked: 
         );
 
     text
+}
+
+pub fn construct_series_info(template: String, series: &Series) -> String {
+    template
+        .replace("{id}", &series.id.to_string())
+        .replace("{title}", &series.title)
+        .replace("{media_type}", &series.media_type.to_string())
 }
 
 pub async fn upload_photo(

@@ -53,6 +53,20 @@ impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => 
 impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "group_characters");
 impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "group_characters");
 
+#[derive(Default, Deserialize, Serialize)]
+pub struct Series {
+    pub id: i64,
+    pub title: String,
+    pub media_type: Media,
+}
+
+crud!(Series {}, "series");
+impl_delete!(Series { delete_by_id(id: i64) => "`where id = #{id}`" }, "series");
+impl_update!(Series { update_by_id(id: i64) => "`where id = #{id}`" }, "series");
+impl_select!(Series { select_by_id(id: i64) -> Option => "`where id = #{id}`" }, "series");
+impl_select!(Series { select_by_name(title: &str) -> Option => "`where title like #{'%' + title + '%'} limit 1`" }, "series");
+impl_select!(Series { select_last() -> Option => "`order by id desc limit 1`" }, "series");
+
 #[derive(Deserialize, Serialize)]
 pub struct User {
     pub id: i64,
@@ -127,9 +141,38 @@ pub enum Gender {
 impl std::fmt::Display for Gender {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
-            Self::Male => "male",
-            Self::Female => "female",
-            Self::Other => "other",
+            Self::Male => "Male",
+            Self::Female => "Female",
+            Self::Other => "Other",
+        })
+    }
+}
+
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Media {
+    Anime,
+    Game,
+    Manga,
+    Manhua,
+    Manhwa,
+    LightNovel,
+    VisualNovel,
+    #[default]
+    Unknown,
+}
+
+impl std::fmt::Display for Media {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Anime => "Anime",
+            Self::Game => "Game",
+            Self::Manga => "Manga",
+            Self::Manhua => "Manhua",
+            Self::Manhwa => "Manhwa",
+            Self::LightNovel => "Light Novel",
+            Self::VisualNovel => "Visual Novel",
+            Self::Unknown => "Unknown",
         })
     }
 }
