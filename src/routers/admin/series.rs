@@ -82,7 +82,7 @@ async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) 
 
             message
                 .edit(
-                    InputMessage::html(crate::utils::construct_series_info(&series, None))
+                    InputMessage::html(crate::utils::construct_series_info(&series, 0))
                         .reply_markup(&reply_markup::inline(vec![vec![button::inline(
                             t("continue_button"),
                             format!("series edit {}", series.id),
@@ -111,6 +111,7 @@ async fn delete_series(_client: &mut Client, update: &mut Update, data: &mut Dat
     let t = |key| i18n.get(key);
 
     let query = update.get_query().unwrap();
+    let sender = update.get_sender().unwrap();
     let message = query.load_message().await?;
 
     let splitted = utils::split_query(query.data());
@@ -152,7 +153,7 @@ async fn delete_series(_client: &mut Client, update: &mut Update, data: &mut Dat
                 .reply_markup(&reply_markup::inline(vec![vec![
                     button::inline(
                         t("cancel_button"),
-                        format!("series edit {} back", series_id),
+                        format!("series {0} {1} {2}", series_id, sender.id(), 1),
                     ),
                     button::inline(
                         t("confirm_button"),
@@ -187,29 +188,6 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
         if let Some(mut series) = Series::select_by_id(conn, series_id).await? {
             if splitted.len() >= 4 {
                 match splitted[3].as_str() {
-                    "back" => {
-                        message
-                            .edit(
-                                InputMessage::html(crate::utils::construct_series_info(
-                                    &series, None,
-                                ))
-                                .reply_markup(
-                                    &reply_markup::inline(vec![vec![
-                                        button::inline(
-                                            t("edit_button"),
-                                            format!("series edit {}", series_id),
-                                        ),
-                                        button::inline(
-                                            t("delete_button"),
-                                            format!("series delete {}", series_id),
-                                        ),
-                                    ]]),
-                                ),
-                            )
-                            .await?;
-
-                        return Ok(());
-                    }
                     "title" => {
                         let field = t("title");
                         let timeout = 15;
@@ -346,12 +324,12 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
 
             buttons.push(vec![button::inline(
                 t("back_button"),
-                format!("series edit {} back", series_id),
+                format!("series {0} {1} {2}", series_id, sender.id(), 1),
             )]);
 
             message
                 .edit(
-                    InputMessage::html(crate::utils::construct_series_info(&series, None))
+                    InputMessage::html(crate::utils::construct_series_info(&series, 0))
                         .reply_markup(&reply_markup::inline(buttons)),
                 )
                 .await?;

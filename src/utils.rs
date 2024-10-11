@@ -32,7 +32,7 @@ pub fn escape_html(text: impl Into<String>) -> String {
 }
 
 pub fn construct_character_info(character: &Character, series: Option<Series>) -> String {
-    let template = construct_character_partial_info(character)
+    let template = construct_character_partial_info(character, true, 0)
         + "{series_type} <i>{series_title}</i>\n\n⭐: {bubble}";
 
     template
@@ -63,24 +63,45 @@ pub fn construct_character_info(character: &Character, series: Option<Series>) -
         )
 }
 
-pub fn construct_character_partial_info(character: &Character) -> String {
+pub fn construct_character_partial_info(
+    character: &Character,
+    show_artist: bool,
+    space_count: usize,
+) -> String {
     let template = String::from("{gender} <code>{id}</code>. <b>{name}</b>\n");
 
     let name = character.name.clone()
-        + &format!(
-            " | 🎨 {}.",
-            if !(character.image_link == "." || character.image_link == "0") {
-                format!(
-                    "<a href='{0}'>{1}</a>",
-                    character.image_link, character.artist
-                )
-            } else {
-                character.artist.clone()
-            }
-        );
+        + &if show_artist {
+            format!(
+                " | 🎨 {}.",
+                if !(character.image_link == "." || character.image_link == "0") {
+                    format!(
+                        "<a href='{0}'>{1}</a>",
+                        character.image_link, character.artist
+                    )
+                } else {
+                    character.artist.clone()
+                }
+            )
+        } else {
+            String::new()
+        };
+
+    let character_id_length = character.id.to_string().len();
 
     template
-        .replace("{id}", &character.id.to_string())
+        .replace(
+            "{id}",
+            &format!(
+                "{0}{1}",
+                if space_count > character_id_length {
+                    " ".repeat(space_count - character_id_length)
+                } else {
+                    String::new()
+                },
+                character.id
+            ),
+        )
         .replace(
             "{gender}",
             match character.gender {
@@ -92,18 +113,19 @@ pub fn construct_character_partial_info(character: &Character) -> String {
         .replace("{name}", &name)
 }
 
-pub fn construct_series_info(series: &Series, character: Option<&Character>) -> String {
-    let mut template =
-        String::from("<code>{id}</code>. <b>{title}</b>\n{emoji} <i>{media_type}</i>\n\n");
+pub fn construct_series_info(series: &Series, total_characters: usize) -> String {
+    let mut template = String::from("{emoji} <code>{id}</code>. <b>{title}</b>");
 
-    if let Some(character) = character {
-        template += &construct_character_partial_info(character);
+    if total_characters > 0 {
+        template += &format!(" | 👨‍👩‍👧‍👦 : {}", total_characters);
     }
 
+    template += "\n\n";
+
     template
+        .replace("{emoji}", media_type_symbol(&series.media_type))
         .replace("{id}", &series.id.to_string())
         .replace("{title}", &series.title)
-        .replace("{emoji}", media_type_symbol(&series.media_type))
         .replace("{media_type}", &series.media_type.to_string())
 }
 

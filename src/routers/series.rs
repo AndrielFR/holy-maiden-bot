@@ -14,11 +14,20 @@ pub fn router() -> Router {
             macros::command!("obra")
                 .or(macros::command!("/!.", "o"))
                 .or(macros::command!("serie"))
+                .or(macros::command!("series"))
                 .or(macros::command!("/!.", "s")),
         ))
         .add_handler(Handler::callback_query(
             see_serie,
             filters::query("series id:int sender:int index:int"),
+        ))
+        .add_handler(Handler::new_message(
+            see_serie_characters,
+            macros::command!("/!.", "si"),
+        ))
+        .add_handler(Handler::callback_query(
+            see_serie_characters,
+            filters::query("series i id:int sender:int index:int"),
         ))
         .add_handler(Handler::callback_query(
             like_series,
@@ -89,9 +98,8 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
             let mut file = None;
             let mut index = 1;
-            let total = ((Character::select_by_series(conn, series.id).await?.len() as f64)
-                / (char_per_page as f64))
-                .ceil() as usize;
+            let total_characters = Character::count_by_series(conn, series.id).await?;
+            let total = ((total_characters as f64) / (char_per_page as f64)).ceil() as usize;
             let mut buttons = Vec::new();
 
             if splitted.len() > 2 {
@@ -111,16 +119,26 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
             let characters =
                 Character::select_page_by_series(conn, series.id, index as u16, char_per_page)
                     .await?;
+            let greater_id_length = characters
+                .iter()
+                .map(|character| character.id.to_string().len())
+                .max()
+                .unwrap_or(0);
+
             for (num, character) in characters.iter().enumerate() {
                 if num == 0 {
                     if !is_like {
                         file = crate::utils::upload_photo(client, character.clone(), conn).await?;
                     }
 
-                    caption = crate::utils::construct_series_info(&series, Some(character));
-                } else {
-                    caption += &crate::utils::construct_character_partial_info(&character);
+                    caption = crate::utils::construct_series_info(&series, total_characters);
                 }
+
+                caption += &crate::utils::construct_character_partial_info(
+                    &character,
+                    false,
+                    greater_id_length,
+                );
             }
 
             if index > 1 {
@@ -168,10 +186,140 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 message.reply(input_message).await?;
             }
         } else {
+            if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
+                return see_serie_characters(client, update, data).await;
+            }
+
             message
                 .reply(InputMessage::html(t("unknown_series")))
                 .await?;
         }
+    }
+
+    Ok(())
+}
+
+async fn see_serie_characters(
+    client: &mut Client,
+    update: &mut Update,
+    data: &mut Data,
+) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+
+    let t = |key| i18n.get(key);
+
+    let query = update.get_query();
+    let sender = update.get_sender().unwrap();
+    let message = if let Some(ref query) = query {
+        query.load_message().await?
+    } else {
+        update.get_message().unwrap()
+    };
+
+    let mut splitted = if let Some(ref query) = query {
+        utils::split_query(query.data())
+    } else {
+        message
+            .text()
+            .split_whitespace()
+            .map(|part| part.to_string())
+            .collect::<Vec<String>>()
+    };
+
+    if splitted.len() > 1 {
+        if splitted[0].contains("si") {
+            splitted.insert(1, "i".to_string());
+        }
+
+        let conn = db.get_conn();
+        let sender_id = sender.id();
+
+        if let Some(series) = match splitted[2].parse::<i64>() {
+            Ok(id) => Series::select_by_id(conn, id).await?,
+            Err(_) => {
+                if let Some(series) = Series::select_by_name(conn, &splitted[1]).await? {
+                    Some(series)
+                } else {
+                    None
+                }
+            }
+        } {
+            let mut file = None;
+            let mut index = 1;
+            let total = Character::count_by_series(conn, series.id).await?;
+            let mut buttons = Vec::new();
+
+            if splitted.len() > 3 {
+                if let Ok(user_id) = splitted[3].parse::<i64>() {
+                    if user_id != sender_id {
+                        return Ok(());
+                    }
+                }
+
+                if let Ok(i) = splitted[4].parse::<i64>() {
+                    index = i as usize;
+                }
+            }
+
+            let mut caption = String::new();
+
+            let characters =
+                Character::select_page_by_series(conn, series.id, index as u16, 1).await?;
+            for character in characters.iter() {
+                file = crate::utils::upload_photo(client, character.clone(), conn).await?;
+
+                caption += &(crate::utils::construct_character_partial_info(&character, true, 0)
+                    + &crate::utils::construct_series_info(&series, 0));
+            }
+
+            caption += &format!("🔖 | {}/{}", index, total);
+
+            if index > 1 {
+                buttons.push(button::inline(
+                    "⏪",
+                    format!("series i {0} {1} {2}", series.id, sender_id, 1),
+                ));
+                buttons.push(button::inline(
+                    "⬅",
+                    format!("series i {0} {1} {2}", series.id, sender_id, index - 1),
+                ));
+            }
+            if index < total {
+                buttons.push(button::inline(
+                    "➡",
+                    format!("series i {0} {1} {2}", series.id, sender_id, index + 1),
+                ));
+                buttons.push(button::inline(
+                    "⏩",
+                    format!("series i {0} {1} {2}", series.id, sender_id, total),
+                ));
+            }
+            let buttons = vec![buttons];
+
+            let mut input_message = InputMessage::html(caption);
+
+            if !buttons.is_empty() {
+                input_message = input_message.reply_markup(&reply_markup::inline(buttons));
+            }
+
+            if let Some(file) = file {
+                input_message = input_message.photo(file);
+            }
+
+            if query.is_some() {
+                message.edit(input_message).await?;
+            } else {
+                message.reply(input_message).await?;
+            }
+        }
+    } else {
+        message
+            .reply(InputMessage::html(t("invalid_command").replace(
+                "{cmd}",
+                &crate::utils::escape_html(format!("{} <name|id>", splitted[0])),
+            )))
+            .await?;
     }
 
     Ok(())
