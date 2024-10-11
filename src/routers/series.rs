@@ -96,7 +96,6 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
         } {
             let char_per_page = 15;
 
-            let mut file = None;
             let mut index = 1;
             let total_characters = Character::count_by_series(conn, series.id).await?;
             let total = ((total_characters as f64) / (char_per_page as f64)).ceil() as usize;
@@ -127,10 +126,6 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
             for (num, character) in characters.iter().enumerate() {
                 if num == 0 {
-                    if !is_like {
-                        file = crate::utils::upload_photo(client, character.clone(), conn).await?;
-                    }
-
                     caption = crate::utils::construct_series_info(&series, total_characters);
                 }
 
@@ -176,14 +171,17 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 input_message = input_message.reply_markup(&reply_markup::inline(buttons));
             }
 
-            if let Some(file) = file {
-                input_message = input_message.photo(file);
-            }
-
             if query.is_some() {
                 message.edit(input_message).await?;
             } else {
-                message.reply(input_message).await?;
+                if let Some(file) = crate::utils::upload_banner(client, series.clone(), conn)
+                    .await
+                    .unwrap()
+                {
+                    message.reply(input_message.photo(file)).await?;
+                } else {
+                    message.reply(input_message).await?;
+                }
             }
         } else {
             if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
@@ -276,10 +274,13 @@ async fn see_serie_characters(
             caption += &format!("🔖 | {}/{}", index, total);
 
             if index > 1 {
-                buttons.push(button::inline(
-                    "⏪",
-                    format!("series i {0} {1} {2}", series.id, sender_id, 1),
-                ));
+                if index > 2 {
+                    buttons.push(button::inline(
+                        "⏪",
+                        format!("series i {0} {1} {2}", series.id, sender_id, 1),
+                    ));
+                }
+
                 buttons.push(button::inline(
                     "⬅",
                     format!("series i {0} {1} {2}", series.id, sender_id, index - 1),
@@ -290,17 +291,19 @@ async fn see_serie_characters(
                     "➡",
                     format!("series i {0} {1} {2}", series.id, sender_id, index + 1),
                 ));
-                buttons.push(button::inline(
-                    "⏩",
-                    format!("series i {0} {1} {2}", series.id, sender_id, total),
-                ));
+
+                if index < total - 1 {
+                    buttons.push(button::inline(
+                        "⏩",
+                        format!("series i {0} {1} {2}", series.id, sender_id, total),
+                    ));
+                }
             }
-            let buttons = vec![buttons];
 
             let mut input_message = InputMessage::html(caption);
 
             if !buttons.is_empty() {
-                input_message = input_message.reply_markup(&reply_markup::inline(buttons));
+                input_message = input_message.reply_markup(&reply_markup::inline(vec![buttons]));
             }
 
             if let Some(file) = file {
@@ -312,6 +315,10 @@ async fn see_serie_characters(
             } else {
                 message.reply(input_message).await?;
             }
+        } else {
+            message
+                .reply(InputMessage::html(t("unknown_series")))
+                .await?;
         }
     } else {
         message

@@ -33,6 +33,7 @@ CREATE TABLE "group_characters" (
 CREATE TABLE "series" (
 	"id"	INTEGER NOT NULL,
 	"title"	TEXT NOT NULL,
+	"banner"	TEXT,
 	"liked_by"	TEXT NOT NULL DEFAULT '[]',
 	"media_type"	TEXT NOT NULL DEFAULT 'unknown',
 	PRIMARY KEY("id" AUTOINCREMENT)

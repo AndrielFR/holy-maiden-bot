@@ -30,7 +30,7 @@ pub fn router() -> Router {
         ))
 }
 
-async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn add_series(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
     let conv = data.get_module::<Conversation>().unwrap();
@@ -41,7 +41,7 @@ async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) 
     let query = update.get_query().unwrap();
     let sender = query.sender();
     let message = query.load_message().await?;
-    let timeout = 15;
+    let mut timeout = 15;
 
     match conv
         .ask_message(
@@ -64,7 +64,7 @@ async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) 
             let last_id = Series::select_last(conn).await?.map_or(0, |serie| serie.id);
 
             let title = response.text();
-            let series = Series {
+            let mut series = Series {
                 id: last_id + 1,
                 title: title.to_string(),
                 ..Default::default()
@@ -89,6 +89,82 @@ async fn add_series(_client: &mut Client, update: &mut Update, data: &mut Data) 
                         )]])),
                 )
                 .await?;
+
+            let field = t("banner");
+            timeout = 30;
+
+            match conv
+                .ask_photo(
+                    chat,
+                    sender,
+                    InputMessage::html(
+                        t("ask_field")
+                            .replace("{field}", &field)
+                            .replace("{timeout}", &timeout.to_string()),
+                    ),
+                    crate::filters::sudoers(),
+                    Duration::from_secs(timeout),
+                )
+                .await
+                .unwrap()
+            {
+                (sent, Some(response)) => {
+                    let photo = response.photo().unwrap();
+                    let bytes = crate::utils::download_tele_photo(client, photo).await?;
+
+                    series.banner = Some(bytes.clone());
+                    match Series::update_by_id(conn, &series, series.id).await {
+                        Ok(_) => {
+                            sent.edit(InputMessage::html(
+                                t("field_updated").replace("{field}", &field.to_lowercase()),
+                            ))
+                            .await?;
+                        }
+                        Err(_) => {
+                            sent.edit(InputMessage::html(
+                                t("error_occurred").replace("{field}", &field.to_lowercase()),
+                            ))
+                            .await?;
+                        }
+                    }
+
+                    let mut stream = Cursor::new(&bytes);
+                    let file = client
+                        .upload_stream(&mut stream, bytes.len(), format!("char_{}.jpg", series.id))
+                        .await?;
+
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    sent.delete().await?;
+                    let _ = response.delete().await;
+                    // if message.refetch().await.is_ok() {
+                    message.delete().await?;
+                    message
+                        .reply(
+                            InputMessage::html(
+                                message.html_text()
+                                    + &format!("<a href='tg://user?id={}'>ㅤ</a>", sender.id()),
+                            )
+                            .photo(file)
+                            .reply_markup(&reply_markup::inline(vec![vec![button::inline(
+                                t("continue_button"),
+                                format!("series edit {}", series.id),
+                            )]])),
+                        )
+                        .await?;
+                    // }
+                }
+                (sent, None) => {
+                    sent.edit(InputMessage::html(
+                        t("operation_cancelled").replace("{reason}", &t("timeout")),
+                    ))
+                    .await?;
+
+                    Series::delete_by_id(conn, series.id).await?;
+
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    sent.delete().await?;
+                }
+            }
         }
         (sent, None) => {
             sent.edit(InputMessage::html(
@@ -167,7 +243,7 @@ async fn delete_series(_client: &mut Client, update: &mut Update, data: &mut Dat
     Ok(())
 }
 
-async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
     let mut db = data.get_module::<Database>().unwrap();
     let i18n = data.get_module::<I18n>().unwrap();
     let conv = data.get_module::<Conversation>().unwrap();
@@ -184,7 +260,9 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
     if splitted.len() >= 3 {
         let conn = db.get_conn();
 
+        let mut file = None;
         let series_id = splitted[2].parse::<i64>().unwrap();
+
         if let Some(mut series) = Series::select_by_id(conn, series_id).await? {
             if splitted.len() >= 4 {
                 match splitted[3].as_str() {
@@ -227,6 +305,77 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
                                         .await?;
                                     }
                                 }
+
+                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                sent.delete().await?;
+                                let _ = response.delete().await;
+                            }
+                            (sent, None) => {
+                                sent.edit(InputMessage::html(
+                                    t("operation_cancelled").replace("{reason}", &t("timeout")),
+                                ))
+                                .await?;
+
+                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                sent.delete().await?;
+
+                                return Ok(());
+                            }
+                        }
+                    }
+                    "banner" => {
+                        let field = t("banner");
+                        let timeout = 30;
+
+                        match conv
+                            .ask_photo(
+                                chat,
+                                sender,
+                                InputMessage::html(
+                                    t("ask_field")
+                                        .replace("{field}", &field)
+                                        .replace("{timeout}", &timeout.to_string()),
+                                ),
+                                crate::filters::sudoers(),
+                                Duration::from_secs(timeout),
+                            )
+                            .await
+                            .unwrap()
+                        {
+                            (sent, Some(response)) => {
+                                let photo = response.photo().unwrap();
+                                let bytes =
+                                    crate::utils::download_tele_photo(client, photo).await?;
+
+                                series.banner = Some(bytes.clone());
+
+                                match Series::update_by_id(conn, &series, series_id).await {
+                                    Ok(_) => {
+                                        sent.edit(InputMessage::html(
+                                            t("field_updated")
+                                                .replace("{field}", &field.to_lowercase()),
+                                        ))
+                                        .await?;
+                                    }
+                                    Err(_) => {
+                                        sent.edit(InputMessage::html(
+                                            t("error_occurred")
+                                                .replace("{field}", &field.to_lowercase()),
+                                        ))
+                                        .await?;
+                                    }
+                                }
+
+                                let mut stream = Cursor::new(&bytes);
+                                file = Some(
+                                    client
+                                        .upload_stream(
+                                            &mut stream,
+                                            bytes.len(),
+                                            format!("char_{}.jpg", series_id),
+                                        )
+                                        .await?,
+                                );
 
                                 tokio::time::sleep(Duration::from_secs(2)).await;
                                 sent.delete().await?;
@@ -310,7 +459,7 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
                 }
             }
 
-            let fields = vec!["title", "media_type"];
+            let fields = vec!["title", "media_type", "banner"];
             let buttons = fields
                 .into_iter()
                 .map(|field| {
@@ -327,11 +476,15 @@ async fn edit_series(_client: &mut Client, update: &mut Update, data: &mut Data)
                 format!("series {0} {1} {2}", series_id, sender.id(), 1),
             )]);
 
+            let mut input_message =
+                InputMessage::html(crate::utils::construct_series_info(&series, 0));
+
+            if let Some(file) = file {
+                input_message = input_message.photo(file);
+            }
+
             message
-                .edit(
-                    InputMessage::html(crate::utils::construct_series_info(&series, 0))
-                        .reply_markup(&reply_markup::inline(buttons)),
-                )
+                .edit(input_message.reply_markup(&reply_markup::inline(buttons)))
                 .await?;
         }
     }

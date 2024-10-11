@@ -135,10 +135,36 @@ pub fn media_type_symbol(media: &Media) -> &str {
         Media::Game => "🧩",
         Media::Manga => "📚",
         Media::Manhua => "📚",
-        Media::Manhwa => "📚",
+        Media::Manhwa => "📓",
         Media::LightNovel => "📖",
         Media::VisualNovel => "🧩",
         Media::Unknown => "❓",
+    }
+}
+
+pub async fn upload_banner(
+    client: &mut Client,
+    mut series: Series,
+    conn: &mut RBatis,
+) -> Result<Option<Uploaded>> {
+    if let Some(bytes) = series.banner {
+        // Update series's banner bytes
+        series.banner = Some(bytes.clone());
+        Series::update_by_id(conn, &series, series.id).await?;
+
+        let mut stream = Cursor::new(&bytes);
+
+        Ok(Some(
+            client
+                .upload_stream(
+                    &mut stream,
+                    bytes.len(),
+                    format!("series_{}-{}.jpg", series.id, series.title),
+                )
+                .await?,
+        ))
+    } else {
+        Ok(None)
     }
 }
 

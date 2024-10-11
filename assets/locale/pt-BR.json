@@ -11,11 +11,13 @@
     "edit_button": "Editar ✏",
     "game_button": "Jogo 🧩",
     "list_button": "Listar 📋",
+    "manga_button": "Mangá 📚",
     "cancel_button": "Cancelar ❌",
     "delete_button": "Excluir ❌",
     "rename_button": "Renomear 📛",
     "select_button": "Selecione um dos botões abaixo: 📲",
     "confirm_button": "Confirmar ✔️",
+    "unknown_button": "Desconhecido ❓",
     "continue_button": "Continuar ➡️",
 
     "male_button": "Masculino ♂",
