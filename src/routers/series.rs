@@ -256,7 +256,9 @@ async fn see_serie_characters(
                         return Ok(());
                     }
                 }
+            }
 
+            if splitted.len() > 4 {
                 if let Ok(i) = splitted[4].parse::<i64>() {
                     index = i as usize;
                 }
