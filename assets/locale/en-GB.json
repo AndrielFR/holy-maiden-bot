@@ -66,6 +66,7 @@
 
     "not_a_id": "🤔 — That's not an ID. Try again.",
     "invalid_id": "🤔 — The ID you entered is invalid. Try again.",
+    "invalid_guess": "🤔 — Your answer is not valid. Try again.",
     "invalid_command": "🤨 — Command used in the <b>wrong</b> way.\n\nTry: <code>{cmd}</code>",
 
     "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",

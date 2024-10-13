@@ -79,6 +79,14 @@ async fn collect_character(
                                 return Ok(());
                             }
 
+                            if guess.is_empty() || message.media().is_some() {
+                                message
+                                    .reply(InputMessage::html(t("invalid_guess")))
+                                    .await?;
+
+                                return Ok(());
+                            }
+
                             let name = character.name.trim().to_lowercase();
                             let mut names = vec![name];
                             character
