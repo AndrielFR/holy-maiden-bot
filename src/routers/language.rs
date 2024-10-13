@@ -11,7 +11,9 @@ pub fn router() -> Router {
     Router::default()
         .add_handler(Handler::new_message(
             language,
-            macros::command!("language").and(filters::private().or(filters::admin())),
+            macros::command!("language")
+                .or(macros::command!("lang"))
+                .and(filters::private().or(filters::admin())),
         ))
         .add_handler(Handler::callback_query(
             set_language,
