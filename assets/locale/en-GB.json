@@ -66,6 +66,7 @@
     "alias_already_exists": "⚠️ — There is already an alias with this name. Try another.",
 
     "not_a_group": "This command can only be used in groups.",
+    "not_private": "This command can only be used in private chats.",
 
     "not_a_id": "🤔 — That's not an ID. Try again.",
     "invalid_id": "🤔 — The ID you entered is invalid. Try again.",
