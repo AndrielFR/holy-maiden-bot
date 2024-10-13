@@ -41,6 +41,7 @@
     "gender": "Gender",
     "aliases": "Aliases",
     "timeout": "Timeout",
+    "unknown": "Unknown",
     "character": "Character",
     "series_id": "Series ID",
     "characters": "Characters",
@@ -87,7 +88,7 @@
     "character_swapped": "🔄 — You successfully exchanged <b>{old}</b> for <b>{new}</b>.",
     "expired_character": "This character has expired or has already been captured. (❌)",
     "unknown_character": "🤔 — I couldn't find that character. Try again.",
-    "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> 🔥",
+    "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> (<i>{series}</i>) 🔥",
 
     "unknown_series": "🤔 — I couldn't find that series. Try again."
 }

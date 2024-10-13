@@ -34,6 +34,7 @@
     "gender": "Gênero",
     "aliases": "Apelidos",
     "timeout": "Tempo esgotado",
+    "unknown": "Desconhecido",
     "character": "Personagem",
     "series_id": "ID da série",
     "characters": "Personagens",
@@ -80,7 +81,7 @@
     "character_swapped": "🔄 — Você trocou <b>{old}</b> por <b>{new}</b> com sucesso.",
     "expired_character": "Esse personagem expirou ou já foi capturado. (❌)",
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
-    "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> 🔥",
+    "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> (<i>{series}</i>) 🔥",
 
     "unknown_series": "🤔 — Não consegui encontrar essa série. Tente novamente."
 }

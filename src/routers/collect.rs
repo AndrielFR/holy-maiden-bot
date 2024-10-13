@@ -8,7 +8,7 @@ use grammers_client::{
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::{Character, GroupCharacter, UserCharacters},
+    database::models::{Character, GroupCharacter, Series, UserCharacters},
     modules::{Conversation, Database, I18n},
     Result,
 };
@@ -281,8 +281,16 @@ async fn collect_character(
 
                                         return Ok(());
                                     } else {
+                                        let series_title = if let Some(series) =
+                                            Series::select_by_id(conn, character.series_id).await?
+                                        {
+                                            series.title
+                                        } else {
+                                            t("unknown")
+                                        };
                                         text = t("character_collected")
-                                            .replace("{name}", &character.name);
+                                            .replace("{name}", &character.name)
+                                            .replace("{series}", &series_title);
 
                                         // Add character to user's collection
                                         characters.push(character.id);
