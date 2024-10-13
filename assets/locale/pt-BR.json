@@ -78,7 +78,7 @@
     "wrong_character": "⚠️ — <b>Ops!</b> O nome do personagem não é este, tente novamente.",
     "select_character": "Selecione o personagem pelo qual você deseja trocar:\n\n<i>Você tem <code>{timeout}</code><b>s</b> para escolher</i>.",
     "character_escaped": "Ops... O personagem <details>{name}</details> acabou fugindo! (❌)\n\n🔖 Lembre-se dele(a) e seja mais rápido na próxima vez!",
-    "character_swapped": "🔄 — Você trocou <b>{old}</b> por <b>{new}</b> com sucesso.",
+    "character_swapped": "🔄 — Você trocou <code>{old_id}</code>. <b>{old_name}</b> por <code>{new_id}</code>. <b>{new_name}</b> com sucesso.",
     "expired_character": "Esse personagem expirou ou já foi capturado. (❌)",
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
     "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> (<i>{series}</i>) 🔥",

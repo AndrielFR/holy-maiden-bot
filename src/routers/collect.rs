@@ -249,8 +249,10 @@ async fn collect_character(
                                                                                 ).await? {
                                                                                     sent.edit(InputMessage::html(t(
                                                                                         "character_swapped")
-                                                                                            .replace("{old}", &old_character.name)
-                                                                                            .replace("{new}", &character.name)
+                                                                                            .replace("{old_id}", &old_character.id.to_string())
+                                                                                            .replace("{old_name}", &old_character.name)
+                                                                                            .replace("{new_id}", &character.id.to_string())
+                                                                                            .replace("{new_name}", &character.name)
                                                                                     )).await?;
                                                                                     }
                                                                         }
