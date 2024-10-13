@@ -37,9 +37,11 @@ impl Conversation {
             if let Ok(Some(update)) = self._wait_for_update(user, filter.clone(), timeout).await {
                 if let Some(r_chat) = update.get_chat() {
                     if let Some(r_message) = update.get_message() {
-                        if check_message(r_chat, &r_message, sent.id()) {
-                            message = Some(r_message);
-                            break;
+                        if !r_message.text().is_empty() && r_message.media().is_none() {
+                            if check_message(r_chat, &r_message, sent.id()) {
+                                message = Some(r_message);
+                                break;
+                            }
                         }
                     }
                 }
