@@ -23,7 +23,7 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::new_message(
             see_serie_characters,
-            macros::command!("/!.", "si"),
+            macros::command!("/!.", "si").or(macros::command!("/!.", "oi")),
         ))
         .add_handler(Handler::callback_query(
             see_serie_characters,
@@ -107,7 +107,9 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                         return Ok(());
                     }
                 }
+            }
 
+            if splitted.len() > 3 {
                 if let Ok(i) = splitted[3].parse::<i64>() {
                     index = i as usize;
                 }
@@ -226,7 +228,7 @@ async fn see_serie_characters(
     };
 
     if splitted.len() > 1 {
-        if splitted[0].contains("si") {
+        if splitted[0].contains("si") || splitted[0].contains("oi") {
             splitted.insert(1, "i".to_string());
         }
 
@@ -236,7 +238,7 @@ async fn see_serie_characters(
         if let Some(series) = match splitted[2].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,
             Err(_) => {
-                if let Some(series) = Series::select_by_name(conn, &splitted[1]).await? {
+                if let Some(series) = Series::select_by_name(conn, &splitted[2]).await? {
                     Some(series)
                 } else {
                     None
