@@ -20,10 +20,12 @@
     "rename_button": "Rename 📛",
     "select_button": "Select one of the buttons below: 📲",
     "confirm_button": "Confirm ✔️",
+    "private_button": "Private 🔒",
     "unknown_button": "Unknown ❓",
     "continue_button": "Continue ➡️",
     "light_novel_button": "Light Novel 📖",
     "visual_novel_button": "Visual Novel 🧩",
+    "add_to_a_group_button": "Add to a group ➕",
 
     "male_button": "Male ♂",
     "female_button": "Female ♀",
@@ -70,9 +72,9 @@
     "invalid_guess": "🤔 — Your answer is not valid. Try again.",
     "invalid_command": "🤨 — Command used in the <b>wrong</b> way.\n\nTry: <code>{cmd}</code>",
 
-    "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> waifus or husbandos from <u>various</u> animes.\n\nTo get started, type /help",
+    "start": "<b>Hi!</b> I'm a bot that can help you <details>collect</details> characters from <u>different series</u>.\n\n💬 — Start by setting the language in /language, use /help to find out the bot's commands.\n➕ — Add me to a group to start collecting characters!",
 
-    "help": "There is a list of commands you can use:\n\n<b>/start</b> - Start the bot\n<b>/help</b> - Get a list of commands\n<b>/language</b> - Change the language used to display messages\n\n<b>/list</b> - List all the waifus/husbandos you have collected\n<b>/delete</b> - Delete a waifu/husbando",
+    "help": "💬 — Bot's command list:\n\n<blockquote>General ⛱</blockquote>\n<b>/start</b> - Starts the bot.\n<b>/help</b> - Displays this message.\n<b>/language</b> - Changes the language used to display messages.\n\n<blockquote>Groups 🤼</blockquote>\n<b>/list</b> - Lists in an album all the characters you have collected.\n<b>/list i</b> - Lists individually all the characters you have collected. (<code>.l</code>, <code>/l</code>)\n<b>/character &lt;id|name&gt;</b> - Shows the information of a character. (<code>.c</code>, <code>/c</code>, <code>/char</code>, <code>.p</code>, <code>/p</code>, <code>/perso</code>)\n<b>/series &lt;id|title&gt;</b> - Shows the information of a series. (<code>.s</code>, <code>/s</code>, <code>/serie</code>, <code>.o</code>, <code>/o</code>, <code>/obra</code>)\n<b>/series i &lt;id|title&gt;</b> - Shows individually all the characters of a series. (<code>.si</code>, <code>.oi</code>)\n<b>/delete &lt;id&gt;</b> - Remove a character from the collection. (<code>.d</code>, <code>/d</code>)",
 
     "language_set": "The language has been set to {new_lang}",
     "select_language": "Select the language you want to use to display messages:",
