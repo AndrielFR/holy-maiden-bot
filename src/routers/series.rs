@@ -92,7 +92,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 splitted[1] = splitted[1..].join(" ");
                 splitted.truncate(2);
 
-                if let Some(series) = Series::select_by_name(conn, &splitted[1]).await? {
+                if let Some(series) = Series::select_by_title(conn, &splitted[1]).await? {
                     Some(series)
                 } else {
                     None
@@ -242,7 +242,7 @@ async fn see_serie_characters(
                 splitted[2] = splitted[2..].join(" ");
                 splitted.truncate(3);
 
-                if let Some(series) = Series::select_by_name(conn, &splitted[2]).await? {
+                if let Some(series) = Series::select_by_title(conn, &splitted[2]).await? {
                     Some(series)
                 } else {
                     None
