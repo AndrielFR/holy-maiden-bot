@@ -41,7 +41,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         update.get_message().unwrap()
     };
 
-    let splitted = if let Some(ref query) = query {
+    let mut splitted = if let Some(ref query) = query {
         utils::split_query(query.data())
     } else {
         message
@@ -78,6 +78,9 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         if let Some(mut character) = match splitted[1].parse::<i64>() {
             Ok(id) => Character::select_by_id(conn, id).await?,
             Err(_) => {
+                splitted[1] = splitted[1..].join(" ");
+                splitted.truncate(2);
+
                 if let Some(character) = Character::select_by_name(conn, &splitted[1]).await? {
                     Some(character)
                 } else {

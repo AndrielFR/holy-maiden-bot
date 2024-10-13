@@ -49,7 +49,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
         update.get_message().unwrap()
     };
 
-    let splitted = if let Some(ref query) = query {
+    let mut splitted = if let Some(ref query) = query {
         utils::split_query(query.data())
     } else {
         message
@@ -84,9 +84,14 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
         let is_like = splitted[0].contains("like");
         let sender_id = sender.id();
 
-        if let Some(series) = match splitted[1].parse::<i64>() {
+        if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
+            return see_serie_characters(client, update, data).await;
+        } else if let Some(series) = match splitted[1].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,
             Err(_) => {
+                splitted[1] = splitted[1..].join(" ");
+                splitted.truncate(2);
+
                 if let Some(series) = Series::select_by_name(conn, &splitted[1]).await? {
                     Some(series)
                 } else {
@@ -186,10 +191,6 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 }
             }
         } else {
-            if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
-                return see_serie_characters(client, update, data).await;
-            }
-
             message
                 .reply(InputMessage::html(t("unknown_series")))
                 .await?;
@@ -238,6 +239,9 @@ async fn see_serie_characters(
         if let Some(series) = match splitted[2].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,
             Err(_) => {
+                splitted[2] = splitted[2..].join(" ");
+                splitted.truncate(3);
+
                 if let Some(series) = Series::select_by_name(conn, &splitted[2]).await? {
                     Some(series)
                 } else {
