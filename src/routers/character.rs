@@ -19,6 +19,10 @@ pub fn router() -> Router {
                 .or(macros::command!("/!.", "p")),
         ))
         .add_handler(Handler::callback_query(
+            see_character,
+            filters::query("char id:int"),
+        ))
+        .add_handler(Handler::callback_query(
             like_character,
             filters::query("clike id:int"),
         ))

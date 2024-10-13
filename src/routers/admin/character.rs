@@ -234,10 +234,7 @@ async fn delete_character(
                         .replace("{id}", &character_id.to_string()),
                 )
                 .reply_markup(&reply_markup::inline(vec![vec![
-                    button::inline(
-                        t("cancel_button"),
-                        format!("char edit {} back", character_id),
-                    ),
+                    button::inline(t("cancel_button"), format!("char {}", character_id)),
                     button::inline(
                         t("confirm_button"),
                         format!("char delete {} confirm", character_id),
@@ -273,30 +270,6 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
         if let Some(mut character) = Character::select_by_id(conn, character_id).await? {
             if splitted.len() >= 4 {
                 match splitted[3].as_str() {
-                    "back" => {
-                        message
-                            .edit(
-                                InputMessage::html(crate::utils::construct_character_info(
-                                    &character,
-                                    Series::select_by_id(conn, character.series_id).await?,
-                                ))
-                                .reply_markup(
-                                    &reply_markup::inline(vec![vec![
-                                        button::inline(
-                                            t("edit_button"),
-                                            format!("char edit {}", character_id),
-                                        ),
-                                        button::inline(
-                                            t("delete_button"),
-                                            format!("char delete {}", character_id),
-                                        ),
-                                    ]]),
-                                ),
-                            )
-                            .await?;
-
-                        return Ok(());
-                    }
                     "name" => {
                         let field = t("name");
                         let timeout = 15;
@@ -1130,7 +1103,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
 
             buttons.push(vec![button::inline(
                 t("back_button"),
-                format!("char edit {} back", character_id),
+                format!("char {}", character_id),
             )]);
 
             let mut input_message = InputMessage::html(crate::utils::construct_character_info(
