@@ -2,7 +2,7 @@ use std::{pin::pin, time::Duration};
 
 use futures_util::future::{select, Either};
 use grammers_client::{
-    types::{Chat, Message},
+    types::{Chat, Media, Message},
     Client, InputMessage, Update,
 };
 use grammers_friendly::prelude::*;
@@ -37,7 +37,13 @@ impl Conversation {
             if let Ok(Some(update)) = self._wait_for_update(user, filter.clone(), timeout).await {
                 if let Some(r_chat) = update.get_chat() {
                     if let Some(r_message) = update.get_message() {
-                        if !r_message.text().is_empty() && r_message.media().is_none() {
+                        if !r_message.text().is_empty() {
+                            if let Some(media) = r_message.media() {
+                                if !matches!(media, Media::WebPage(_)) {
+                                    continue;
+                                }
+                            }
+
                             if check_message(r_chat, &r_message, sent.id()) {
                                 message = Some(r_message);
                                 break;
