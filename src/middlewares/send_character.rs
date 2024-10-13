@@ -107,6 +107,15 @@ impl MiddlewareImpl for SendCharacter {
                             }
                         }
 
+                        // If the character has already been sent, skip it
+                        if GroupCharacter::select_by_id(conn, group_id, random_character.id)
+                            .await?
+                            .is_some()
+                        {
+                            *num_messages = *num_needed;
+                            return Ok(());
+                        }
+
                         let file =
                             crate::utils::upload_photo(client, random_character.clone(), conn)
                                 .await?
@@ -121,7 +130,7 @@ impl MiddlewareImpl for SendCharacter {
                             )
                             .await?;
 
-                        // Update group last character
+                        // Insert group last character
                         let group_character = GroupCharacter {
                             group_id,
                             character_id: random_character.id,
