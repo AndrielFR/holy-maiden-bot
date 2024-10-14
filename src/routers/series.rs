@@ -236,6 +236,17 @@ async fn see_serie_characters(
         let conn = db.get_conn();
         let sender_id = sender.id();
 
+        if splitted.len() <= 2 {
+            message
+                .reply(InputMessage::html(t("invalid_command").replace(
+                    "{cmd}",
+                    &crate::utils::escape_html(format!("{} <name|id>", splitted[0])),
+                )))
+                .await?;
+
+            return Ok(());
+        }
+
         if let Some(series) = match splitted[2].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,
             Err(_) => {
