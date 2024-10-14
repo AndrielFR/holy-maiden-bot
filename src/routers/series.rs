@@ -240,7 +240,7 @@ async fn see_serie_characters(
             message
                 .reply(InputMessage::html(t("invalid_command").replace(
                     "{cmd}",
-                    &crate::utils::escape_html(format!("{} <name|id>", splitted[0])),
+                    &crate::utils::escape_html(format!("{} i <name|id>", splitted[0])),
                 )))
                 .await?;
 
