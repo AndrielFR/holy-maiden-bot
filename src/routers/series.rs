@@ -127,7 +127,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
             let characters =
                 Character::select_page_by_series(conn, series.id, index as u16, char_per_page)
                     .await?;
-            let greater_id_length = characters
+            let space_count = characters
                 .iter()
                 .map(|character| character.id.to_string().len())
                 .max()
@@ -138,11 +138,8 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                     caption = crate::utils::construct_series_info(&series, total_characters);
                 }
 
-                caption += &crate::utils::construct_character_partial_info(
-                    &character,
-                    false,
-                    greater_id_length,
-                );
+                caption +=
+                    &crate::utils::construct_character_partial_info(&character, false, space_count);
             }
 
             if index > 1 {
@@ -415,10 +412,23 @@ async fn search_series(_client: &mut Client, update: &mut Update, data: &mut Dat
         let mut text = t("search_results").replace("{search}", &title) + "\n";
 
         let series = Series::select_page_by_title(conn, &title, 1, 15).await?;
+        let space_count = series
+            .iter()
+            .map(|series| series.id.to_string().len())
+            .max()
+            .unwrap_or(0);
+
         for series in series.iter() {
+            let character_id_length = series.id.to_string().len();
+
             text += &format!(
-                "\n{0} <code>{1}</code>. <b>{2}</b>",
+                "\n{0} <code>{1}</code><code>{2}</code>. <b>{3}</b>",
                 crate::utils::media_type_symbol(&series.media_type),
+                if space_count > character_id_length {
+                    " ".repeat(space_count - character_id_length)
+                } else {
+                    String::new()
+                },
                 series.id,
                 series.title
             );

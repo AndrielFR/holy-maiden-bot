@@ -26,6 +26,10 @@ pub fn router() -> Router {
             like_character,
             filters::query("clike id:int"),
         ))
+        .add_handler(Handler::new_message(
+            search_characters,
+            macros::command!("/!.", "cs"),
+        ))
 }
 
 async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
@@ -73,9 +77,10 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
         }
     } else {
         let conn = db.get_conn();
-        let is_like = splitted[0].contains("like");
 
-        if let Some(mut character) = match splitted[1].parse::<i64>() {
+        if splitted[1].contains("s") {
+            return search_characters(client, update, data).await;
+        } else if let Some(mut character) = match splitted[1].parse::<i64>() {
             Ok(id) => Character::select_by_id(conn, id).await?,
             Err(_) => {
                 splitted[1] = splitted[1..].join(" ");
@@ -88,6 +93,8 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
                 }
             }
         } {
+            let is_like = splitted[0].contains("like");
+
             let mut buttons = vec![vec![button::inline(
                 format!("❤ {}", character.liked_by.len()),
                 format!("clike {}", character.id),
@@ -173,4 +180,62 @@ async fn like_character(client: &mut Client, update: &mut Update, data: &mut Dat
     }
 
     return Ok(());
+}
+
+async fn search_characters(
+    _client: &mut Client,
+    update: &mut Update,
+    data: &mut Data,
+) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+
+    let t = |key| i18n.get(key);
+    let conn = db.get_conn();
+
+    let message = update.get_message().unwrap();
+
+    let mut splitted = message.text().split_whitespace().collect::<Vec<&str>>();
+
+    if splitted.len() > 1 {
+        if splitted[0].contains("cs") {
+            splitted.insert(1, "s");
+        }
+
+        if splitted.len() <= 2 {
+            message
+                .reply(InputMessage::html(t("invalid_command").replace(
+                    "{cmd}",
+                    &crate::utils::escape_html(format!("{} s <name>", splitted[0])),
+                )))
+                .await?;
+
+            return Ok(());
+        }
+
+        let name = splitted[2..].join(" ");
+        let mut text = t("search_results").replace("{search}", &name) + "\n";
+
+        let characters = Character::select_page_by_name(conn, &name, 1, 15).await?;
+        let space_count = characters
+            .iter()
+            .map(|character| character.id.to_string().len())
+            .max()
+            .unwrap_or(0);
+
+        for character in characters.iter() {
+            text += &crate::utils::construct_character_partial_info(&character, false, space_count);
+        }
+
+        message.reply(InputMessage::html(text)).await?;
+    } else {
+        message
+            .reply(InputMessage::html(t("invalid_command").replace(
+                "{cmd}",
+                &crate::utils::escape_html(format!("{} <name>", splitted[0])),
+            )))
+            .await?;
+    }
+
+    Ok(())
 }

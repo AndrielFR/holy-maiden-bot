@@ -24,6 +24,7 @@ impl_select!(Character { select_by_id(id: i64) -> Option => "`where id = #{id} l
 impl_select!(Character { select_by_name(name: &str) -> Option => "`where name like #{'%' + name + '%'} or aliases like #{'%' + name + '%'} order by name limit 1`" }, "characters");
 impl_select!(Character { select_by_series(series_id: i64) -> Vec => "`where series_id = #{series_id}`" }, "characters");
 impl_select!(Character { select_page(page: u16, limit: u16) => "`limit #{limit} offset #{(page - 1) * limit}`" }, "characters");
+impl_select!(Character { select_page_by_name(name: &str, page: u16, limit: u16) -> Vec => "`where name like #{'%' + name + '%'} or aliases like #{'%' + name + '%'} order by name limit #{limit} offset #{(page - 1) * limit}`" }, "characters");
 impl_select!(Character { select_page_by_series(series_id: i64, page: u16, limit: u16) -> Vec => "`where series_id = #{series_id} order by name limit #{limit} offset #{(page - 1) * limit}`" }, "characters");
 impl_select!(Character { select_last() -> Option => "`order by id desc limit 1`" }, "characters");
 impl_select!(Character { select_random() -> Option => "`order by random() limit 1`" }, "characters");

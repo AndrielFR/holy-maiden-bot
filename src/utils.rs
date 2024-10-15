@@ -93,7 +93,7 @@ pub fn construct_character_partial_info(
         .replace(
             "{id}",
             &format!(
-                "{0}{1}",
+                "{0}</code><code>{1}",
                 if space_count > character_id_length {
                     " ".repeat(space_count - character_id_length)
                 } else {
@@ -102,14 +102,7 @@ pub fn construct_character_partial_info(
                 character.id
             ),
         )
-        .replace(
-            "{gender}",
-            match character.gender {
-                Gender::Male => "💥",
-                Gender::Female => "🌸",
-                Gender::Other => "🍃",
-            },
-        )
+        .replace("{gender}", gender_symbol(&character.gender))
         .replace("{name}", &name)
 }
 
@@ -139,6 +132,14 @@ pub fn media_type_symbol(media: &Media) -> &str {
         Media::LightNovel => "📖",
         Media::VisualNovel => "🧩",
         Media::Unknown => "❓",
+    }
+}
+
+pub fn gender_symbol(gender: &Gender) -> &str {
+    match gender {
+        Gender::Male => "💥",
+        Gender::Female => "🌸",
+        Gender::Other => "🍃",
     }
 }
 
