@@ -33,6 +33,10 @@ pub fn router() -> Router {
             like_series,
             filters::query("slike id:int"),
         ))
+        .add_handler(Handler::new_message(
+            search_series,
+            macros::command!("/!.", "ss"),
+        ))
 }
 
 async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
@@ -75,7 +79,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
             message
                 .reply(InputMessage::html(t("invalid_command").replace(
                     "{cmd}",
-                    &crate::utils::escape_html(format!("{} <name|id>", splitted[0])),
+                    &crate::utils::escape_html(format!("{} <title|id>", splitted[0])),
                 )))
                 .await?;
         }
@@ -86,17 +90,15 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
         if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
             return see_serie_characters(client, update, data).await;
+        } else if splitted[1].contains("s") {
+            return search_series(client, update, data).await;
         } else if let Some(series) = match splitted[1].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,
             Err(_) => {
                 splitted[1] = splitted[1..].join(" ");
                 splitted.truncate(2);
 
-                if let Some(series) = Series::select_by_title(conn, &splitted[1]).await? {
-                    Some(series)
-                } else {
-                    None
-                }
+                Series::select_by_title(conn, &splitted[1]).await?
             }
         } {
             let char_per_page = 15;
@@ -240,7 +242,7 @@ async fn see_serie_characters(
             message
                 .reply(InputMessage::html(t("invalid_command").replace(
                     "{cmd}",
-                    &crate::utils::escape_html(format!("{} i <name|id>", splitted[0])),
+                    &crate::utils::escape_html(format!("{} i <title|id>", splitted[0])),
                 )))
                 .await?;
 
@@ -253,11 +255,7 @@ async fn see_serie_characters(
                 splitted[2] = splitted[2..].join(" ");
                 splitted.truncate(3);
 
-                if let Some(series) = Series::select_by_title(conn, &splitted[2]).await? {
-                    Some(series)
-                } else {
-                    None
-                }
+                Series::select_by_title(conn, &splitted[2]).await?
             }
         } {
             let mut file = None;
@@ -343,7 +341,7 @@ async fn see_serie_characters(
         message
             .reply(InputMessage::html(t("invalid_command").replace(
                 "{cmd}",
-                &crate::utils::escape_html(format!("{} <name|id>", splitted[0])),
+                &crate::utils::escape_html(format!("{} <title|id>", splitted[0])),
             )))
             .await?;
     }
@@ -384,4 +382,57 @@ async fn like_series(client: &mut Client, update: &mut Update, data: &mut Data) 
     }
 
     return Ok(());
+}
+
+async fn search_series(_client: &mut Client, update: &mut Update, data: &mut Data) -> Result<()> {
+    let mut db = data.get_module::<Database>().unwrap();
+    let i18n = data.get_module::<I18n>().unwrap();
+
+    let t = |key| i18n.get(key);
+    let conn = db.get_conn();
+
+    let message = update.get_message().unwrap();
+
+    let mut splitted = message.text().split_whitespace().collect::<Vec<&str>>();
+
+    if splitted.len() > 1 {
+        if splitted[0].contains("ss") {
+            splitted.insert(1, "s");
+        }
+
+        if splitted.len() <= 2 {
+            message
+                .reply(InputMessage::html(t("invalid_command").replace(
+                    "{cmd}",
+                    &crate::utils::escape_html(format!("{} s <title>", splitted[0])),
+                )))
+                .await?;
+
+            return Ok(());
+        }
+
+        let title = splitted[2..].join(" ");
+        let mut text = t("search_results").replace("{search}", &title) + "\n";
+
+        let series = Series::select_page_by_title(conn, &title, 1, 15).await?;
+        for series in series.iter() {
+            text += &format!(
+                "\n{0} <code>{1}</code>. <b>{2}</b>",
+                crate::utils::media_type_symbol(&series.media_type),
+                series.id,
+                series.title
+            );
+        }
+
+        message.reply(InputMessage::html(text)).await?;
+    } else {
+        message
+            .reply(InputMessage::html(t("invalid_command").replace(
+                "{cmd}",
+                &crate::utils::escape_html(format!("{} <title>", splitted[0])),
+            )))
+            .await?;
+    }
+
+    Ok(())
 }
