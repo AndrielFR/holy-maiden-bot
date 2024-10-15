@@ -45,6 +45,7 @@
     "artist_name": "Nome do artista",
 
     "ask_field": "🛑 — Responda a essa mensagem com o requerimento:\n\n- <b>{field}</b>.\n\n<i>Envie em até <code>{timeout}</code><b>s</b></i>.",
+    "no_results": "🔎 — Nenhum resultado encontrado para: <code>{search}</code>.",
     "max_aliases": "Você atingiu o número máximo de apelidos que pode adicionar. ⛔\n\nRemova algum para adicionar outro.",
     "field_updated": "O campo <b>{field}</b> foi atualizado com sucesso.",
     "guess_cheated": "🤨 — Parece que você tentou trapacear, mas eu te peguei! (❌)\n\nPor sua causa, o personagem <details>{name}</details> acabou fugindo.",

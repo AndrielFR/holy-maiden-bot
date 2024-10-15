@@ -214,17 +214,22 @@ async fn search_characters(
         }
 
         let name = splitted[2..].join(" ");
-        let mut text = t("search_results").replace("{search}", &name) + "\n";
+        let mut text = t("search_results").replace("{search}", &name) + "\n\n";
 
         let characters = Character::select_page_by_name(conn, &name, 1, 15).await?;
-        let space_count = characters
-            .iter()
-            .map(|character| character.id.to_string().len())
-            .max()
-            .unwrap_or(0);
+        if characters.is_empty() {
+            text = t("no_results").replace("{search}", &name);
+        } else {
+            let space_count = characters
+                .iter()
+                .map(|character| character.id.to_string().len())
+                .max()
+                .unwrap_or(0);
 
-        for character in characters.iter() {
-            text += &crate::utils::construct_character_partial_info(&character, false, space_count);
+            for character in characters.iter() {
+                text +=
+                    &crate::utils::construct_character_partial_info(&character, false, space_count);
+            }
         }
 
         message.reply(InputMessage::html(text)).await?;

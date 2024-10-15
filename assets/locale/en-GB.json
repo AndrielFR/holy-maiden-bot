@@ -52,6 +52,7 @@
     "artist_name": "Artist name",
 
     "ask_field": "🛑 — Reply to this message with the requirement:\n\n- <b>{field}</b>.\n\n<i>Send within <code>{timeout}</code><b>s</b></i>.",
+    "no_results": "🔎 — No results found to: <code>{search}</code>.",
     "max_aliases": "You have reached the maximum number of aliases you can add. ⛔\n\nRemove some to add another.",
     "field_updated": "The field <b>{field}</b> has been successfully updated.",
     "guess_cheated": "🤨 — It seems you tried to cheat, but I caught you! (❌)\n\nBecause of you, the character <details>{name}</details> has escaped.",

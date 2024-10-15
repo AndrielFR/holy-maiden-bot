@@ -409,29 +409,33 @@ async fn search_series(_client: &mut Client, update: &mut Update, data: &mut Dat
         }
 
         let title = splitted[2..].join(" ");
-        let mut text = t("search_results").replace("{search}", &title) + "\n";
+        let mut text = t("search_results").replace("{search}", &title) + "\n\n";
 
         let series = Series::select_page_by_title(conn, &title, 1, 15).await?;
-        let space_count = series
-            .iter()
-            .map(|series| series.id.to_string().len())
-            .max()
-            .unwrap_or(0);
+        if series.is_empty() {
+            text = t("no_results").replace("{search}", &title);
+        } else {
+            let space_count = series
+                .iter()
+                .map(|series| series.id.to_string().len())
+                .max()
+                .unwrap_or(0);
 
-        for series in series.iter() {
-            let character_id_length = series.id.to_string().len();
+            for series in series.iter() {
+                let character_id_length = series.id.to_string().len();
 
-            text += &format!(
-                "\n{0} <code>{1}</code><code>{2}</code>. <b>{3}</b>",
-                crate::utils::media_type_symbol(&series.media_type),
-                if space_count > character_id_length {
-                    " ".repeat(space_count - character_id_length)
-                } else {
-                    String::new()
-                },
-                series.id,
-                series.title
-            );
+                text += &format!(
+                    "{0} <code>{1}</code><code>{2}</code>. <b>{3}</b>\n",
+                    crate::utils::media_type_symbol(&series.media_type),
+                    if space_count > character_id_length {
+                        " ".repeat(space_count - character_id_length)
+                    } else {
+                        String::new()
+                    },
+                    series.id,
+                    series.title
+                );
+            }
         }
 
         message.reply(InputMessage::html(text)).await?;
