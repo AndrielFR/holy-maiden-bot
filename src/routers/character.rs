@@ -28,7 +28,7 @@ pub fn router() -> Router {
         ))
         .add_handler(Handler::new_message(
             search_characters,
-            macros::command!("/!.", "cs"),
+            macros::command!("/!.", "cs").or(macros::command!("/!.", "ps")),
         ))
 }
 
@@ -198,7 +198,7 @@ async fn search_characters(
     let mut splitted = message.text().split_whitespace().collect::<Vec<&str>>();
 
     if splitted.len() > 1 {
-        if splitted[0].contains("cs") {
+        if splitted[0].contains("cs") || splitted[0].contains("ps") {
             splitted.insert(1, "s");
         }
 
