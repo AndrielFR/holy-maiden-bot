@@ -35,6 +35,7 @@ CREATE TABLE "series" (
 	"title"	TEXT NOT NULL,
 	"artist"	TEXT NOT NULL DEFAULT 'Artist',
 	"banner"	TEXT,
+	"aliases"	TEXT NOT NULL DEFAULT '[]',
 	"liked_by"	TEXT NOT NULL DEFAULT '[]',
 	"image_link"	TEXT NOT NULL DEFAULT '.',
 	"media_type"	TEXT NOT NULL DEFAULT 'unknown',

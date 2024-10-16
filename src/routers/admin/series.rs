@@ -483,6 +483,341 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                             return Ok(());
                         }
                     }
+                    "aliases" => {
+                        let buttons = series
+                            .aliases
+                            .iter()
+                            .enumerate()
+                            .map(|(index, alias)| {
+                                button::inline(
+                                    alias,
+                                    format!("series edit {0} aliases edit {1}", series_id, index),
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        let mut buttons = utils::split_kb_to_columns(buttons, 1);
+
+                        if splitted.len() >= 5 {
+                            match splitted[4].as_str() {
+                                "add" => {
+                                    if series.aliases.len() >= 5 {
+                                        let sent = message
+                                            .reply(InputMessage::html(t("max_aliases")))
+                                            .await?;
+                                        tokio::time::sleep(Duration::from_secs(2)).await;
+                                        sent.delete().await?;
+
+                                        return Ok(());
+                                    }
+
+                                    let field = t("alias");
+                                    let timeout = 10;
+
+                                    match conv
+                                        .ask_message(
+                                            chat,
+                                            sender,
+                                            InputMessage::html(
+                                                t("ask_field")
+                                                    .replace("{field}", &field)
+                                                    .replace("{timeout}", &timeout.to_string()),
+                                            ),
+                                            crate::filters::sudoers(),
+                                            Duration::from_secs(timeout),
+                                        )
+                                        .await
+                                        .unwrap()
+                                    {
+                                        (sent, Some(response)) => {
+                                            let alias = response.text();
+
+                                            if alias.len() < 3 {
+                                                sent.edit(InputMessage::html(
+                                                    t("alias_too_short").replace("{min}", "3"),
+                                                ))
+                                                .await?;
+                                            } else if alias.len() > 15 {
+                                                sent.edit(InputMessage::html(
+                                                    t("alias_too_long").replace("{max}", "15"),
+                                                ))
+                                                .await?;
+                                            } else {
+                                                if series.aliases.iter().any(|a| alias == a) {
+                                                    sent.edit(InputMessage::html(t(
+                                                        "alias_already_exists",
+                                                    )))
+                                                    .await?;
+                                                } else {
+                                                    series.aliases.push(alias.trim().to_string());
+                                                    buttons.push(vec![button::inline(
+                                                        alias,
+                                                        format!(
+                                                            "series edit {0} aliases edit {1}",
+                                                            series_id,
+                                                            series.aliases.len() - 1
+                                                        ),
+                                                    )]);
+
+                                                    match Series::update_by_id(
+                                                        conn, &series, series_id,
+                                                    )
+                                                    .await
+                                                    {
+                                                        Ok(_) => {
+                                                            sent.edit(InputMessage::html(
+                                                                t("field_updated").replace(
+                                                                    "{field}",
+                                                                    &field.to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+                                                        }
+                                                        Err(_) => {
+                                                            sent.edit(InputMessage::html(
+                                                                t("error_occurred").replace(
+                                                                    "{field}",
+                                                                    &field.to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+                                            let _ = response.delete().await;
+                                        }
+                                        (sent, None) => {
+                                            sent.edit(InputMessage::html(
+                                                t("operation_cancelled")
+                                                    .replace("{reason}", &t("timeout")),
+                                            ))
+                                            .await?;
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+                                "edit" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        if let Some(buttons) = buttons.get_mut(index) {
+                                            *buttons = vec![
+                                                button::inline(
+                                                    t("rename_button"),
+                                                    format!(
+                                                        "series edit {0} aliases rename {1}",
+                                                        series_id, index
+                                                    ),
+                                                ),
+                                                button::inline(
+                                                    t("cancel_button"),
+                                                    format!("series edit {0} aliases", series_id),
+                                                ),
+                                                button::inline(
+                                                    t("delete_button"),
+                                                    format!(
+                                                        "series edit {0} aliases delete {1}",
+                                                        series_id, index
+                                                    ),
+                                                ),
+                                            ];
+                                        };
+                                    }
+                                }
+                                "delete" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        if let Some(alias) = series.aliases.get(index) {
+                                            if splitted.len() == 7
+                                                && splitted[6].as_str() == "confirm"
+                                            {
+                                                buttons.remove(index);
+                                                series.aliases.remove(index);
+
+                                                match Series::update_by_id(conn, &series, series_id)
+                                                    .await
+                                                {
+                                                    Ok(_) => {}
+                                                    Err(_) => {
+                                                        let sent = message
+                                                            .reply(InputMessage::html(
+                                                                t("error_occurred").replace(
+                                                                    "{field}",
+                                                                    &t("aliases").to_lowercase(),
+                                                                ),
+                                                            ))
+                                                            .await?;
+
+                                                        tokio::time::sleep(Duration::from_secs(2))
+                                                            .await;
+                                                        sent.delete().await?;
+                                                    }
+                                                }
+                                            } else {
+                                                message
+                                                .edit(
+                                                    InputMessage::html(
+                                                        t("confirm_delete")
+                                                            .replace(
+                                                                "{object}",
+                                                                &t("alias").to_lowercase(),
+                                                            )
+                                                            .replace("{id}", alias),
+                                                    )
+                                                    .reply_markup(&reply_markup::inline(vec![
+                                                        vec![
+                                                            button::inline(
+                                                                t("cancel_button"),
+                                                                format!("series edit {0} aliases", series_id),
+                                                            ),
+                                                            button::inline(
+                                                                t("confirm_button"),
+                                                                format!("series edit {0} aliases delete {1} confirm", series_id, index),
+                                                            ),
+                                                        ],
+                                                    ])),
+                                                )
+                                                .await?;
+
+                                                return Ok(());
+                                            }
+                                        }
+                                    }
+                                }
+                                "rename" => {
+                                    if let Ok(index) = splitted[5].parse::<usize>() {
+                                        let field = t("alias");
+                                        let timeout = 10;
+
+                                        match conv
+                                            .ask_message(
+                                                chat,
+                                                sender,
+                                                InputMessage::html(
+                                                    t("ask_field")
+                                                        .replace("{field}", &field)
+                                                        .replace("{timeout}", &timeout.to_string()),
+                                                ),
+                                                crate::filters::sudoers(),
+                                                Duration::from_secs(timeout),
+                                            )
+                                            .await
+                                            .unwrap()
+                                        {
+                                            (sent, Some(response)) => {
+                                                let alias = response.text();
+
+                                                if alias.len() < 3 {
+                                                    sent.edit(InputMessage::html(
+                                                        t("alias_too_short").replace("{min}", "3"),
+                                                    ))
+                                                    .await?;
+                                                } else if alias.len() > 15 {
+                                                    sent.edit(InputMessage::html(
+                                                        t("alias_too_long").replace("{max}", "15"),
+                                                    ))
+                                                    .await?;
+                                                } else {
+                                                    if series.aliases.iter().any(|a| alias == a) {
+                                                        sent.edit(InputMessage::html(t(
+                                                            "alias_already_exists",
+                                                        )))
+                                                        .await?;
+                                                    } else {
+                                                        if let Some(current_alias) =
+                                                            series.aliases.get_mut(index)
+                                                        {
+                                                            *current_alias =
+                                                                alias.trim().to_string();
+                                                            if let Some(buttons) =
+                                                                buttons.get_mut(index)
+                                                            {
+                                                                *buttons = vec![button::inline(
+                                                                alias,
+                                                                format!(
+                                                                    "series edit {0} aliases edit {1}",
+                                                                    series_id, index
+                                                                ),
+                                                            )];
+                                                            }
+
+                                                            match Series::update_by_id(
+                                                                conn, &series, series_id,
+                                                            )
+                                                            .await
+                                                            {
+                                                                Ok(_) => {
+                                                                    sent.edit(InputMessage::html(
+                                                                        t("field_updated").replace(
+                                                                            "{field}",
+                                                                            &field.to_lowercase(),
+                                                                        ),
+                                                                    ))
+                                                                    .await?;
+                                                                }
+                                                                Err(_) => {
+                                                                    sent.edit(InputMessage::html(
+                                                                        t("error_occurred")
+                                                                            .replace(
+                                                                                "{field}",
+                                                                                &field
+                                                                                    .to_lowercase(),
+                                                                            ),
+                                                                    ))
+                                                                    .await?;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                                sent.delete().await?;
+                                                let _ = response.delete().await;
+                                            }
+                                            (sent, None) => {
+                                                sent.edit(InputMessage::html(
+                                                    t("operation_cancelled")
+                                                        .replace("{reason}", &t("timeout")),
+                                                ))
+                                                .await?;
+
+                                                tokio::time::sleep(Duration::from_secs(2)).await;
+                                                sent.delete().await?;
+
+                                                return Ok(());
+                                            }
+                                        }
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+
+                        buttons.extend(vec![
+                            vec![button::inline(
+                                t("add_button"),
+                                format!("series edit {} aliases add", series_id),
+                            )],
+                            vec![button::inline(
+                                t("back_button"),
+                                format!("series edit {}", series_id),
+                            )],
+                        ]);
+
+                        message
+                            .edit(
+                                InputMessage::html(t("select_button"))
+                                    .reply_markup(&reply_markup::inline(buttons)),
+                            )
+                            .await?;
+
+                        return Ok(());
+                    }
                     "banner" => {
                         let field = t("banner");
                         let timeout = 30;
@@ -619,7 +954,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                 }
             }
 
-            let fields = vec!["title", "artist", "media_type", "banner"];
+            let fields = vec!["title", "artist", "aliases", "banner", "media_type"];
             let buttons = fields
                 .into_iter()
                 .map(|field| {

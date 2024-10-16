@@ -76,6 +76,7 @@ pub struct Series {
     pub title: String,
     pub artist: String,
     pub banner: Option<Vec<u8>>,
+    pub aliases: Vec<String>,
     pub liked_by: Vec<i64>,
     pub image_link: String,
     pub media_type: Media,
@@ -85,8 +86,8 @@ crud!(Series {}, "series");
 impl_delete!(Series { delete_by_id(id: i64) => "`where id = #{id}`" }, "series");
 impl_update!(Series { update_by_id(id: i64) => "`where id = #{id}`" }, "series");
 impl_select!(Series { select_by_id(id: i64) -> Option => "`where id = #{id}`" }, "series");
-impl_select!(Series { select_by_title(title: &str) -> Option => "`where title like #{'%' + title + '%'} order by title limit 1`" }, "series");
-impl_select!(Series { select_page_by_title(title: &str, page: u16, limit: u16) -> Vec => "`where title like #{'%' + title + '%'} order by title limit #{limit} offset #{(page - 1) * limit}`" }, "series");
+impl_select!(Series { select_by_title(title: &str) -> Option => "`where title like #{'%' + title + '%'} or aliases like #{'%' + title + '%'} order by title limit 1`" }, "series");
+impl_select!(Series { select_page_by_title(title: &str, page: u16, limit: u16) -> Vec => "`where title like #{'%' + title + '%'} or aliases like #{'%' + title + '%'} order by title limit #{limit} offset #{(page - 1) * limit}`" }, "series");
 impl_select!(Series { select_last() -> Option => "`order by id desc limit 1`" }, "series");
 
 #[derive(Deserialize, Serialize)]

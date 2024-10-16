@@ -743,11 +743,7 @@ async fn edit_character(client: &mut Client, update: &mut Update, data: &mut Dat
                                                     ))
                                                     .await?;
                                                 } else {
-                                                    if character
-                                                        .clone()
-                                                        .aliases
-                                                        .iter()
-                                                        .any(|a| alias == a)
+                                                    if character.aliases.iter().any(|a| alias == a)
                                                     {
                                                         sent.edit(InputMessage::html(t(
                                                             "alias_already_exists",
