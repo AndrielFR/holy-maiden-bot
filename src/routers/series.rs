@@ -105,7 +105,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
             let mut index = 1;
             let total_characters = Character::count_by_series(conn, series.id).await?;
-            let total = ((total_characters as f64) / (char_per_page as f64)).ceil() as usize;
+            let total_pages = ((total_characters as f64) / (char_per_page as f64)).ceil() as usize;
             let mut buttons = Vec::new();
 
             if splitted.len() > 2 {
@@ -148,7 +148,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                     format!("series {0} {1} {2}", series.id, sender_id, index - 1),
                 ));
             }
-            if index < total {
+            if index < total_pages {
                 buttons.push(button::inline(
                     "➡",
                     format!("series {0} {1} {2}", series.id, sender_id, index + 1),
@@ -169,7 +169,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
                 ]);
             }
 
-            caption += &format!("\n🔖 | {}/{}", index, total);
+            caption += &format!("\n🔖 | {}/{}", index, total_pages);
 
             let mut input_message = InputMessage::html(caption);
 
@@ -257,7 +257,7 @@ async fn see_serie_characters(
         } {
             let mut file = None;
             let mut index = 1;
-            let total = Character::count_by_series(conn, series.id).await?;
+            let characters_count = Character::count_by_series(conn, series.id).await?;
             let mut buttons = Vec::new();
 
             if splitted.len() > 3 {
@@ -285,7 +285,7 @@ async fn see_serie_characters(
                     + &crate::utils::construct_series_info(&series, 0, false));
             }
 
-            caption += &format!("🔖 | {}/{}", index, total);
+            caption += &format!("🔖 | {}/{}", index, characters_count);
 
             if index > 1 {
                 if index > 2 {
@@ -300,16 +300,19 @@ async fn see_serie_characters(
                     format!("series i {0} {1} {2}", series.id, sender_id, index - 1),
                 ));
             }
-            if index < total {
+            if index < characters_count {
                 buttons.push(button::inline(
                     "➡",
                     format!("series i {0} {1} {2}", series.id, sender_id, index + 1),
                 ));
 
-                if index < total - 1 {
+                if index < characters_count - 1 {
                     buttons.push(button::inline(
                         "⏩",
-                        format!("series i {0} {1} {2}", series.id, sender_id, total),
+                        format!(
+                            "series i {0} {1} {2}",
+                            series.id, sender_id, characters_count
+                        ),
                     ));
                 }
             }

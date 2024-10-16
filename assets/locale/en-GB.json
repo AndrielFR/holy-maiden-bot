@@ -95,5 +95,11 @@
     "unknown_character": "🤔 — I couldn't find that character. Try again.",
     "character_collected": "🏆 — Congratulations! You got it right and captured... <b>{name}</b> (<i>{series}</i>) 🔥",
 
-    "unknown_series": "🤔 — I couldn't find that series. Try again."
+    "unknown_series": "🤔 — I couldn't find that series. Try again.",
+    "series_characters": "📚 — Characters from the series <b>{title}</b>:",
+    "no_character_added": "🤔 — No characters were added to the series <b>{title}</b>.",
+    "send_characters_to_add": "Send the characters you want to add to the series <b>{title}</b>.\n\n<i>Separate the <u>ids</u> with comma, space or line break</i>.",
+    "characters_added_to_series": "📚 — The characters <b>{names}</b> were successfully added to the series <b>{title}</b>.",
+    "select_character_to_remove": "Select the character you want to remove:",
+    "confirm_remove_character_from_series": "Are you sure you want to remove the character <b>{name}</b> from the series <b>{title}</b>?"
 }

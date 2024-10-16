@@ -5,7 +5,7 @@ use grammers_client::{button, reply_markup, Client, InputMessage, Update};
 use grammers_friendly::prelude::*;
 
 use crate::{
-    database::models::{Media, Series},
+    database::models::{Character, Media, Series},
     modules::{Conversation, Database, I18n},
     Result,
 };
@@ -950,11 +950,322 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                             None => {}
                         }
                     }
+                    "characters" => {
+                        let char_per_page = 15;
+
+                        let mut page = 1;
+                        let characters_count = Character::count_by_series(conn, series_id).await?;
+                        let total_pages =
+                            ((characters_count as f64) / (char_per_page as f64)).ceil() as usize;
+
+                        let mut characters = Vec::new();
+
+                        if splitted.len() >= 5 {
+                            if let Ok(p) = splitted[4].parse::<usize>() {
+                                page = p;
+                            } else {
+                                if splitted[4].as_str() == "add" {
+                                    let timeout = 20;
+
+                                    match conv
+                                        .ask_message(
+                                            chat,
+                                            sender,
+                                            InputMessage::html(
+                                                t("send_characters_to_add")
+                                                    .replace("{title}", &series.title),
+                                            ),
+                                            crate::filters::sudoers(),
+                                            Duration::from_secs(timeout),
+                                        )
+                                        .await
+                                        .unwrap()
+                                    {
+                                        (sent, Some(response)) => {
+                                            let text = response.text().trim();
+                                            let mut characters_id = Vec::new();
+
+                                            if text.contains(',') {
+                                                text.split(',').for_each(|part| {
+                                                    if let Ok(id) = part.trim().parse::<i64>() {
+                                                        if !characters_id.contains(&id) {
+                                                            characters_id.push(id);
+                                                        }
+                                                    }
+                                                });
+                                            } else if text.contains('\n') {
+                                                text.split('\n').for_each(|part| {
+                                                    if let Ok(id) = part.trim().parse::<i64>() {
+                                                        if !characters_id.contains(&id) {
+                                                            characters_id.push(id);
+                                                        }
+                                                    }
+                                                });
+                                            } else {
+                                                text.split_whitespace().for_each(|part| {
+                                                    if let Ok(id) = part.trim().parse::<i64>() {
+                                                        if !characters_id.contains(&id) {
+                                                            characters_id.push(id);
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+                                            let mut characters_name = Vec::new();
+                                            for character_id in characters_id.iter() {
+                                                if let Some(mut character) =
+                                                    Character::select_by_id(conn, *character_id)
+                                                        .await?
+                                                {
+                                                    if character.series_id != series_id {
+                                                        character.series_id = series_id;
+                                                        Character::update_by_id(
+                                                            conn,
+                                                            &character,
+                                                            *character_id,
+                                                        )
+                                                        .await?;
+
+                                                        characters_name.push(character.name);
+                                                    }
+                                                }
+                                            }
+
+                                            if characters_id.is_empty()
+                                                || characters_name.is_empty()
+                                            {
+                                                message
+                                                    .edit(
+                                                        InputMessage::html(
+                                                            t("no_character_added")
+                                                                .replace("{title}", &series.title),
+                                                        )
+                                                        .reply_markup(&reply_markup::inline(vec![
+                                                            vec![button::inline(
+                                                                t("continue_button"),
+                                                                format!(
+                                                                "series edit {0} characters {1}",
+                                                                series_id, page
+                                                            ),
+                                                            )],
+                                                        ])),
+                                                    )
+                                                    .await?;
+                                            } else {
+                                                message
+                                                    .edit(
+                                                        InputMessage::html(
+                                                            t("characters_added_to_series")
+                                                                .replace(
+                                                                    "{names}",
+                                                                    &characters_name.join(", "),
+                                                                )
+                                                                .replace("{title}", &series.title),
+                                                        )
+                                                        .reply_markup(&reply_markup::inline(vec![
+                                                            vec![button::inline(
+                                                                t("continue_button"),
+                                                                format!(
+                                                                "series edit {0} characters {1}",
+                                                                series_id, page
+                                                            ),
+                                                            )],
+                                                        ])),
+                                                    )
+                                                    .await?;
+                                            }
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+                                            let _ = response.delete().await;
+
+                                            return Ok(());
+                                        }
+                                        (sent, None) => {
+                                            sent.edit(InputMessage::html(
+                                                t("operation_cancelled")
+                                                    .replace("{reason}", &t("timeout")),
+                                            ))
+                                            .await?;
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+                            }
+
+                            characters = Character::select_page_by_series(
+                                conn,
+                                series_id,
+                                page as u16,
+                                char_per_page,
+                            )
+                            .await?;
+
+                            if splitted.len() >= 6 {
+                                match splitted[5].as_str() {
+                                    "delete" => {
+                                        if splitted.len() >= 7 {
+                                            if let Ok(character_id) = splitted[6].parse::<i64>() {
+                                                if let Some(mut character) =
+                                                    Character::select_by_id(conn, character_id)
+                                                        .await?
+                                                {
+                                                    if splitted.len() >= 8
+                                                        && splitted[7].as_str() == "confirm"
+                                                    {
+                                                        if let Some(index) = characters
+                                                            .iter()
+                                                            .position(|character| {
+                                                                character.id == character_id
+                                                            })
+                                                        {
+                                                            characters.remove(index);
+                                                        }
+
+                                                        character.series_id = 0;
+                                                        Character::update_by_id(
+                                                            conn,
+                                                            &character,
+                                                            character_id,
+                                                        )
+                                                        .await?;
+
+                                                        characters =
+                                                            Character::select_page_by_series(
+                                                                conn,
+                                                                series_id,
+                                                                page as u16,
+                                                                char_per_page,
+                                                            )
+                                                            .await?;
+                                                    } else {
+                                                        message
+                                                        .edit(InputMessage::html(t(
+                                                            "confirm_remove_character_from_series",
+                                                        ).replace("{name}", &character.name).replace("{title}", &series.title)).reply_markup(&reply_markup::inline(vec![vec![button::inline(t("cancel_button"), format!("series edit {0} characters {1} delete", series_id, page)), button::inline(t("confirm_button"), format!("series edit {0} characters {1} delete {2} confirm", series_id, page, character.id))]])))
+                                                        .await?;
+
+                                                        return Ok(());
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        let buttons = characters
+                                            .iter()
+                                            .map(|character| {
+                                                button::inline(
+                                                    format!(
+                                                        "{0}. {1}",
+                                                        character.id, character.name
+                                                    ),
+                                                    format!(
+                                                        "series edit {0} characters {1} delete {2}",
+                                                        series_id, page, character.id
+                                                    ),
+                                                )
+                                            })
+                                            .collect::<Vec<_>>();
+                                        let mut buttons = utils::split_kb_to_columns(buttons, 3);
+                                        buttons.push(vec![button::inline(
+                                            t("cancel_button"),
+                                            format!(
+                                                "series edit {0} characters {1}",
+                                                series_id, page
+                                            ),
+                                        )]);
+
+                                        message
+                                            .edit(
+                                                InputMessage::html(t("select_character_to_remove"))
+                                                    .reply_markup(&reply_markup::inline(buttons)),
+                                            )
+                                            .await?;
+
+                                        return Ok(());
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+
+                        let mut text =
+                            t("series_characters").replace("{title}", &series.title) + "\n\n";
+
+                        let space_count = characters
+                            .iter()
+                            .map(|character| character.id.to_string().len())
+                            .max()
+                            .unwrap_or(0);
+                        for character in characters.iter() {
+                            text += &crate::utils::construct_character_partial_info(
+                                character,
+                                false,
+                                space_count,
+                            )
+                        }
+
+                        text += &format!("\n🔖 | {}/{}", page, total_pages);
+
+                        let mut buttons = Vec::new();
+                        if page > 1 {
+                            buttons.push(button::inline(
+                                "⬅",
+                                format!("series edit {0} characters {1}", series_id, page - 1),
+                            ));
+                        }
+                        if page < total_pages {
+                            buttons.push(button::inline(
+                                "➡",
+                                format!("series edit {0} characters {1}", series_id, page + 1),
+                            ));
+                        }
+                        let mut buttons = utils::split_kb_to_columns(buttons, 2);
+
+                        buttons.extend(vec![
+                            vec![
+                                button::inline(
+                                    t("add_button"),
+                                    format!("series edit {} characters add", series_id),
+                                ),
+                                button::inline(
+                                    t("delete_button"),
+                                    format!(
+                                        "series edit {0} characters {1} delete",
+                                        series_id, page
+                                    ),
+                                ),
+                            ],
+                            vec![button::inline(
+                                t("back_button"),
+                                format!("series edit {}", series_id),
+                            )],
+                        ]);
+
+                        message
+                            .edit(
+                                InputMessage::html(text)
+                                    .reply_markup(&reply_markup::inline(buttons)),
+                            )
+                            .await?;
+                        return Ok(());
+                    }
                     _ => {}
                 }
             }
 
-            let fields = vec!["title", "artist", "aliases", "banner", "media_type"];
+            let fields = vec![
+                "title",
+                "artist",
+                "aliases",
+                "banner",
+                "media_type",
+                "characters",
+            ];
             let buttons = fields
                 .into_iter()
                 .map(|field| {

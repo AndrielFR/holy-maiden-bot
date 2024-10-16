@@ -88,5 +88,11 @@
     "unknown_character": "🤔 — Não consegui encontrar esse personagem. Tente novamente.",
     "character_collected": "🏆 — Parabéns! Você acertou e capturou... <b>{name}</b> (<i>{series}</i>) 🔥",
 
-    "unknown_series": "🤔 — Não consegui encontrar essa série. Tente novamente."
+    "unknown_series": "🤔 — Não consegui encontrar essa série. Tente novamente.",
+    "series_characters": "📚 — Personagens da série <b>{title}</b>:",
+    "no_character_added": "🤔 — Nenhum personagem foi adicionado à série <b>{title}</b>.",
+    "send_characters_to_add": "Envie os personagens que deseja adicionar à série <b>{title}</b>.\n\n<i>Separe os <u>ids</u> por vírgula, espaço ou quebra de linha.</i>",
+    "characters_added_to_series": "📚 — Os personagens <b>{names}</b> foram adicionados à série <b>{title}</b> com sucesso.",
+    "select_character_to_remove": "Selecione o personagem que deseja remover:",
+    "confirm_remove_character_from_series": "Você tem certeza de que deseja remover o personagem <b>{name}</b> da série <b>{title}</b>?"
 }
