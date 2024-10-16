@@ -106,11 +106,26 @@ pub fn construct_character_partial_info(
         .replace("{name}", &name)
 }
 
-pub fn construct_series_info(series: &Series, total_characters: usize) -> String {
+pub fn construct_series_info(
+    series: &Series,
+    total_characters: usize,
+    show_artist: bool,
+) -> String {
     let mut template = String::from("{emoji} <code>{id}</code>. <b>{title}</b>");
 
     if total_characters > 0 {
         template += &format!(" | 👨‍👩‍👧‍👦 : {}", total_characters);
+    }
+
+    if show_artist {
+        template += &format!(
+            " | 🎨 {}.",
+            if !(series.image_link == "." || series.image_link == "0") {
+                format!("<a href='{0}'>{1}</a>", series.image_link, series.artist)
+            } else {
+                series.artist.clone()
+            }
+        )
     }
 
     template += "\n\n";

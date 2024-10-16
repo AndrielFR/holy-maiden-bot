@@ -82,7 +82,7 @@ async fn add_series(client: &mut Client, update: &mut Update, data: &mut Data) -
 
             message
                 .edit(
-                    InputMessage::html(crate::utils::construct_series_info(&series, 0))
+                    InputMessage::html(crate::utils::construct_series_info(&series, 0, false))
                         .reply_markup(&reply_markup::inline(vec![vec![button::inline(
                             t("continue_button"),
                             format!("series edit {}", series.id),
@@ -323,6 +323,166 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                             }
                         }
                     }
+                    "artist" => {
+                        if splitted.len() == 5 {
+                            match splitted[4].as_str() {
+                                "name" => {
+                                    let field = t("artist_name");
+                                    let timeout = 15;
+
+                                    match conv
+                                        .ask_message(
+                                            chat,
+                                            sender,
+                                            InputMessage::html(
+                                                t("ask_field")
+                                                    .replace("{field}", &field)
+                                                    .replace("{timeout}", &timeout.to_string()),
+                                            ),
+                                            crate::filters::sudoers(),
+                                            Duration::from_secs(timeout),
+                                        )
+                                        .await
+                                        .unwrap()
+                                    {
+                                        (sent, Some(response)) => {
+                                            let title = response.text();
+
+                                            series.artist = title.trim().to_string();
+
+                                            match Series::update_by_id(conn, &series, series_id)
+                                                .await
+                                            {
+                                                Ok(_) => {
+                                                    sent.edit(InputMessage::html(
+                                                        t("field_updated").replace(
+                                                            "{field}",
+                                                            &field.to_lowercase(),
+                                                        ),
+                                                    ))
+                                                    .await?;
+                                                }
+                                                Err(_) => {
+                                                    sent.edit(InputMessage::html(
+                                                        t("error_occurred").replace(
+                                                            "{field}",
+                                                            &field.to_lowercase(),
+                                                        ),
+                                                    ))
+                                                    .await?;
+                                                }
+                                            }
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+                                            let _ = response.delete().await;
+                                        }
+                                        (sent, None) => {
+                                            sent.edit(InputMessage::html(
+                                                t("operation_cancelled")
+                                                    .replace("{reason}", &t("timeout")),
+                                            ))
+                                            .await?;
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+                                "link" => {
+                                    let field = t("image_link");
+                                    let timeout = 15;
+
+                                    match conv
+                                        .ask_message(
+                                            chat,
+                                            sender,
+                                            InputMessage::html(
+                                                t("ask_field")
+                                                    .replace("{field}", &field)
+                                                    .replace("{timeout}", &timeout.to_string()),
+                                            ),
+                                            crate::filters::sudoers(),
+                                            Duration::from_secs(timeout),
+                                        )
+                                        .await
+                                        .unwrap()
+                                    {
+                                        (sent, Some(response)) => {
+                                            let link = response.text();
+
+                                            series.image_link = link.trim().to_string();
+
+                                            match Series::update_by_id(conn, &series, series_id)
+                                                .await
+                                            {
+                                                Ok(_) => {
+                                                    sent.edit(InputMessage::html(
+                                                        t("field_updated").replace(
+                                                            "{field}",
+                                                            &field.to_lowercase(),
+                                                        ),
+                                                    ))
+                                                    .await?;
+                                                }
+                                                Err(_) => {
+                                                    sent.edit(InputMessage::html(
+                                                        t("error_occurred").replace(
+                                                            "{field}",
+                                                            &field.to_lowercase(),
+                                                        ),
+                                                    ))
+                                                    .await?;
+                                                }
+                                            }
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+                                            let _ = response.delete().await;
+                                        }
+                                        (sent, None) => {
+                                            sent.edit(InputMessage::html(
+                                                t("operation_cancelled")
+                                                    .replace("{reason}", &t("timeout")),
+                                            ))
+                                            .await?;
+
+                                            tokio::time::sleep(Duration::from_secs(2)).await;
+                                            sent.delete().await?;
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+                                _ => {}
+                            }
+                        } else {
+                            message
+                                .edit(InputMessage::html(t("select_button")).reply_markup(
+                                    &reply_markup::inline(vec![
+                                        vec![
+                                            button::inline(
+                                                t("name") + " ✏",
+                                                format!("series edit {} artist name", series_id),
+                                            ),
+                                            button::inline(
+                                                t("link") + " ✏",
+                                                format!("series edit {} artist link", series_id),
+                                            ),
+                                        ],
+                                        vec![button::inline(
+                                            t("back_button"),
+                                            format!("series edit {}", series_id),
+                                        )],
+                                    ]),
+                                ))
+                                .await?;
+
+                            return Ok(());
+                        }
+                    }
                     "banner" => {
                         let field = t("banner");
                         let timeout = 30;
@@ -459,7 +619,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                 }
             }
 
-            let fields = vec!["title", "media_type", "banner"];
+            let fields = vec!["title", "artist", "media_type", "banner"];
             let buttons = fields
                 .into_iter()
                 .map(|field| {
@@ -477,7 +637,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
             )]);
 
             let mut input_message =
-                InputMessage::html(crate::utils::construct_series_info(&series, 0));
+                InputMessage::html(crate::utils::construct_series_info(&series, 0, true));
 
             if let Some(file) = file {
                 input_message = input_message.photo(file);

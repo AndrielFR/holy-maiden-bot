@@ -135,7 +135,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
             for (num, character) in characters.iter().enumerate() {
                 if num == 0 {
-                    caption = crate::utils::construct_series_info(&series, total_characters);
+                    caption = crate::utils::construct_series_info(&series, total_characters, true);
                 }
 
                 caption +=
@@ -282,7 +282,7 @@ async fn see_serie_characters(
                 file = crate::utils::upload_photo(client, character.clone(), conn).await?;
 
                 caption += &(crate::utils::construct_character_partial_info(&character, true, 0)
-                    + &crate::utils::construct_series_info(&series, 0));
+                    + &crate::utils::construct_series_info(&series, 0, false));
             }
 
             caption += &format!("🔖 | {}/{}", index, total);

@@ -4,11 +4,11 @@ CREATE TABLE "characters" (
 	"image"	TEXT,
 	"stars"	INTEGER NOT NULL DEFAULT 1,
 	"gender"	TEXT NOT NULL,
-	"artist"	TEXT DEFAULT 'Artist',
+	"artist"	TEXT NOT NULL DEFAULT 'Artist',
 	"aliases"	TEXT NOT NULL DEFAULT '[]',
 	"liked_by"	TEXT NOT NULL DEFAULT '[]',
 	"series_id"	INTEGER NOT NULL DEFAULT 0,
-	"image_link"	TEXT DEFAULT '.',
+	"image_link"	TEXT NOT NULL DEFAULT '.',
 	"anilist_id"	INTEGER,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
@@ -33,8 +33,10 @@ CREATE TABLE "group_characters" (
 CREATE TABLE "series" (
 	"id"	INTEGER NOT NULL,
 	"title"	TEXT NOT NULL,
+	"artist"	TEXT NOT NULL DEFAULT 'Artist',
 	"banner"	TEXT,
 	"liked_by"	TEXT NOT NULL DEFAULT '[]',
+	"image_link"	TEXT NOT NULL DEFAULT '.',
 	"media_type"	TEXT NOT NULL DEFAULT 'unknown',
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
