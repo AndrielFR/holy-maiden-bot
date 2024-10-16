@@ -1146,7 +1146,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                                                         message
                                                         .edit(InputMessage::html(t(
                                                             "confirm_remove_character_from_series",
-                                                        ).replace("{name}", &character.name).replace("{title}", &series.title)).reply_markup(&reply_markup::inline(vec![vec![button::inline(t("cancel_button"), format!("series edit {0} characters {1} delete", series_id, page)), button::inline(t("confirm_button"), format!("series edit {0} characters {1} delete {2} confirm", series_id, page, character.id))]])))
+                                                        ).replace("{name}", &character.name).replace("{title}", &series.title)).reply_markup(&reply_markup::inline(vec![vec![button::inline(t("cancel_button"), format!("series edit {0} characters {1} delete", series_id, page)), button::inline(t("confirm_button"), format!("series edit {0} characters {1} remove {2} confirm", series_id, page, character.id))]])))
                                                         .await?;
 
                                                         return Ok(());
@@ -1164,7 +1164,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                                                         character.id, character.name
                                                     ),
                                                     format!(
-                                                        "series edit {0} characters {1} delete {2}",
+                                                        "series edit {0} characters {1} remove {2}",
                                                         series_id, page, character.id
                                                     ),
                                                 )
