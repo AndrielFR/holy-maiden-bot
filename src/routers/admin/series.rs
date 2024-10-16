@@ -1107,7 +1107,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
 
                             if splitted.len() >= 6 {
                                 match splitted[5].as_str() {
-                                    "delete" => {
+                                    "remove" => {
                                         if splitted.len() >= 7 {
                                             if let Ok(character_id) = splitted[6].parse::<i64>() {
                                                 if let Some(mut character) =
@@ -1241,9 +1241,9 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                                     format!("series edit {} characters add", series_id),
                                 ),
                                 button::inline(
-                                    t("delete_button"),
+                                    t("remove_button"),
                                     format!(
-                                        "series edit {0} characters {1} delete",
+                                        "series edit {0} characters {1} remove",
                                         series_id, page
                                     ),
                                 ),
