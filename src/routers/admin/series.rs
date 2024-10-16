@@ -958,7 +958,7 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                         let total_pages =
                             ((characters_count as f64) / (char_per_page as f64)).ceil() as usize;
 
-                        let mut characters = Vec::new();
+                        let mut characters;
 
                         if splitted.len() >= 5 {
                             if let Ok(p) = splitted[4].parse::<usize>() {
@@ -1191,6 +1191,14 @@ async fn edit_series(client: &mut Client, update: &mut Update, data: &mut Data) 
                                     _ => {}
                                 }
                             }
+                        } else {
+                            characters = Character::select_page_by_series(
+                                conn,
+                                series_id,
+                                page as u16,
+                                char_per_page,
+                            )
+                            .await?;
                         }
 
                         let mut text =
