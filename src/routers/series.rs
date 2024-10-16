@@ -90,7 +90,7 @@ async fn see_serie(client: &mut Client, update: &mut Update, data: &mut Data) ->
 
         if ["i", "c", "p"].iter().any(|letter| splitted[1] == *letter) {
             return see_serie_characters(client, update, data).await;
-        } else if splitted[1].contains("s") {
+        } else if splitted[1] == "s" {
             return search_series(client, update, data).await;
         } else if let Some(series) = match splitted[1].parse::<i64>() {
             Ok(id) => Series::select_by_id(conn, id).await?,

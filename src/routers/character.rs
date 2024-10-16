@@ -78,7 +78,7 @@ async fn see_character(client: &mut Client, update: &mut Update, data: &mut Data
     } else {
         let conn = db.get_conn();
 
-        if splitted[1].contains("s") {
+        if splitted[1] == "s" {
             return search_characters(client, update, data).await;
         } else if let Some(mut character) = match splitted[1].parse::<i64>() {
             Ok(id) => Character::select_by_id(conn, id).await?,
