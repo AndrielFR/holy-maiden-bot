@@ -269,8 +269,12 @@ async fn see_serie_characters(
             }
 
             if splitted.len() > 4 {
-                if let Ok(i) = splitted[4].parse::<i64>() {
-                    index = i as usize;
+                if let Ok(i) = splitted[4].parse::<usize>() {
+                    if i > characters_count {
+                        index = characters_count as i64;
+                    } else if i > 0 {
+                        index = i as i64;
+                    }
                 }
             }
 
@@ -278,6 +282,11 @@ async fn see_serie_characters(
 
             let characters =
                 Character::select_page_by_series(conn, series.id, index as u16, 1).await?;
+
+            if characters.is_empty() {
+                return Ok(());
+            }
+
             for character in characters.iter() {
                 file = crate::utils::upload_photo(client, character.clone(), conn).await?;
 
@@ -287,35 +296,29 @@ async fn see_serie_characters(
 
             caption += &format!("🔖 | {}/{}", index, characters_count);
 
-            if index > 1 {
-                if index > 2 {
-                    buttons.push(button::inline(
-                        "⏪",
-                        format!("series i {0} {1} {2}", series.id, sender_id, 1),
-                    ));
-                }
-
-                buttons.push(button::inline(
+            buttons.extend(vec![
+                button::inline(
+                    "⏪",
+                    format!(
+                        "series i {0} {1} {2}",
+                        series.id,
+                        sender_id,
+                        if (index - 4) < 1 { 1 } else { index - 4 }
+                    ),
+                ),
+                button::inline(
                     "⬅",
                     format!("series i {0} {1} {2}", series.id, sender_id, index - 1),
-                ));
-            }
-            if index < characters_count {
-                buttons.push(button::inline(
+                ),
+                button::inline(
                     "➡",
                     format!("series i {0} {1} {2}", series.id, sender_id, index + 1),
-                ));
-
-                if index < characters_count - 1 {
-                    buttons.push(button::inline(
-                        "⏩",
-                        format!(
-                            "series i {0} {1} {2}",
-                            series.id, sender_id, characters_count
-                        ),
-                    ));
-                }
-            }
+                ),
+                button::inline(
+                    "⏩",
+                    format!("series i {0} {1} {2}", series.id, sender_id, index + 4),
+                ),
+            ]);
 
             let mut input_message = InputMessage::html(caption);
 
