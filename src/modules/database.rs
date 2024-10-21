@@ -2,8 +2,10 @@ use std::collections::HashMap;
 
 use grammers_client::{session::PackedChat, types::Chat};
 use grammers_friendly::prelude::*;
-use rbatis::RBatis;
+use rbatis::{table_sync::SqliteTableMapper, RBatis};
 use rbdc_sqlite::Driver;
+
+use crate::database::models::*;
 
 #[derive(Clone)]
 pub struct Database {
@@ -21,10 +23,13 @@ impl Database {
         )
         .unwrap();
 
-        Self {
+        let mut db = Self {
             conn,
             chats_hash: HashMap::new(),
-        }
+        };
+        db.sync().await;
+
+        db
     }
 
     pub fn get_conn(&mut self) -> &mut RBatis {
@@ -39,6 +44,42 @@ impl Database {
         self.chats_hash
             .entry(chat.id())
             .or_insert_with(|| chat.pack());
+    }
+
+    async fn sync(&mut self) {
+        log::info!("syncing database...");
+
+        let character = Character::default();
+        let _ = RBatis::sync(&self.conn, &SqliteTableMapper {}, &character, "characters").await;
+
+        let group = Group::default();
+        let _ = RBatis::sync(&self.conn, &SqliteTableMapper {}, &group, "groups").await;
+
+        let group_character = GroupCharacter::default();
+        let _ = RBatis::sync(
+            &self.conn,
+            &SqliteTableMapper {},
+            &group_character,
+            "groups_characters",
+        )
+        .await;
+
+        let series = Series::default();
+        let _ = RBatis::sync(&self.conn, &SqliteTableMapper {}, &series, "series").await;
+
+        let user = User::default();
+        let _ = RBatis::sync(&self.conn, &SqliteTableMapper {}, &user, "users").await;
+
+        let user_characters = UserCharacters::default();
+        let _ = RBatis::sync(
+            &self.conn,
+            &SqliteTableMapper {},
+            &user_characters,
+            "users_characters",
+        )
+        .await;
+
+        log::info!("database synced");
     }
 }
 

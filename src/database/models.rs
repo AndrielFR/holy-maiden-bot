@@ -42,7 +42,7 @@ impl Character {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Group {
     pub id: i64,
     pub title: String,
@@ -64,11 +64,11 @@ pub struct GroupCharacter {
     pub available: bool,
 }
 
-crud!(GroupCharacter {}, "group_characters");
-impl_delete!(GroupCharacter { delete_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
-impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "group_characters");
-impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "group_characters");
-impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "group_characters");
+crud!(GroupCharacter {}, "groups_characters");
+impl_delete!(GroupCharacter { delete_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "groups_characters");
+impl_update!(GroupCharacter { update_by_id(group_id: i64, character_id: i64) => "`where group_id = #{group_id} and character_id = #{character_id}`" }, "groups_characters");
+impl_select!(GroupCharacter { select_by_id(group_id: i64, character_id: i64) -> Option => "`where group_id = #{group_id} and character_id = #{character_id} limit 1`" }, "groups_characters");
+impl_select!(GroupCharacter { select_last_by_id(group_id: i64) -> Option => "`where group_id = #{group_id} order by last_message_id desc limit 1`" }, "groups_characters");
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct Series {
@@ -90,7 +90,7 @@ impl_select!(Series { select_by_title(title: &str) -> Option => "`where title li
 impl_select!(Series { select_page_by_title(title: &str, page: u16, limit: u16) -> Vec => "`where title like #{'%' + title + '%'} or aliases like #{'%' + title + '%'} order by title limit #{limit} offset #{(page - 1) * limit}`" }, "series");
 impl_select!(Series { select_last() -> Option => "`order by id desc limit 1`" }, "series");
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct User {
     pub id: i64,
     pub username: Option<String>,
@@ -102,17 +102,17 @@ crud!(User {}, "users");
 impl_update!(User { update_by_id(id: i64) => "`where id = #{id}`" }, "users");
 impl_select!(User { select_by_id(id: i64) -> Option => "`where id = #{id}`" }, "users");
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct UserCharacters {
     pub user_id: i64,
     pub group_id: i64,
     pub characters_id: Vec<i64>,
 }
 
-crud!(UserCharacters {}, "user_characters");
-impl_delete!(UserCharacters { delete_by_id(user_id: i64, group_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "user_characters");
-impl_update!(UserCharacters { update_by_id(user_id: i64, group_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "user_characters");
-impl_select!(UserCharacters { select_by_id(user_id: i64, group_id: i64) -> Option => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "user_characters");
+crud!(UserCharacters {}, "users_characters");
+impl_delete!(UserCharacters { delete_by_id(user_id: i64, group_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "users_characters");
+impl_update!(UserCharacters { update_by_id(user_id: i64, group_id: i64) => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "users_characters");
+impl_select!(UserCharacters { select_by_id(user_id: i64, group_id: i64) -> Option => "`where user_id = #{user_id} and group_id = #{group_id}`" }, "users_characters");
 
 impl UserCharacters {
     pub async fn select_or_insert_by_id(
