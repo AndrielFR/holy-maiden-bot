@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 use grammers_client::{session::PackedChat, types::Chat};
 use grammers_friendly::prelude::*;
 use rbatis::{intercept_log::LogInterceptor, table_sync::SqliteTableMapper, RBatis};
-use rbdc_sqlite::Driver;
+use rbdc_pool_deadpool::DeadPool;
+use rbdc_sqlite::{Driver, SqliteConnectOptions};
 
 use crate::database::models::*;
 
@@ -17,11 +18,18 @@ pub struct Database {
 impl Database {
     pub async fn connect() -> Self {
         let conn = RBatis::new();
-        conn.init(
-            Driver {},
+        let options = SqliteConnectOptions::from_str(
             &std::env::var("DATABASE_URL").expect("DATABASE_URL not set"),
         )
         .unwrap();
+
+        // Init dead pool
+        let _ = conn.init_option::<Driver, SqliteConnectOptions, DeadPool>(Driver {}, options);
+
+        // Set pool max size
+        let pool = conn.get_pool().unwrap();
+        pool.set_max_open_conns(100).await;
+        pool.set_max_idle_conns(100).await;
 
         // Set database log level
         conn.get_intercept::<LogInterceptor>()
