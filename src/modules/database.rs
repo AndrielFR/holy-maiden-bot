@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use grammers_client::{session::PackedChat, types::Chat};
 use grammers_friendly::prelude::*;
-use rbatis::{table_sync::SqliteTableMapper, RBatis};
+use rbatis::{intercept_log::LogInterceptor, table_sync::SqliteTableMapper, RBatis};
 use rbdc_sqlite::Driver;
 
 use crate::database::models::*;
@@ -22,6 +22,12 @@ impl Database {
             &std::env::var("DATABASE_URL").expect("DATABASE_URL not set"),
         )
         .unwrap();
+
+        // Set database log level
+        conn.get_intercept::<LogInterceptor>()
+            .unwrap()
+            .set_level_filter(log::LevelFilter::Trace);
+        log::logger().flush();
 
         let mut db = Self {
             conn,
