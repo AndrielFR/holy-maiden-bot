@@ -1,5 +1,7 @@
-use std::{ops::ControlFlow, time::Duration};
+use std::{fs::File, io::Write, ops::ControlFlow, time::Duration};
 
+use chrono::Local;
+use env_logger::{Builder, Target};
 use grammers_client::{session::Session, Client, Config, InitParams, ReconnectionPolicy};
 use grammers_friendly::prelude::*;
 use holy_maiden_bot::{
@@ -8,12 +10,40 @@ use holy_maiden_bot::{
     routers, Result,
 };
 
-const SESSION_FILE: &str = "./holy_maiden.session";
+const LOG_FILE: &str = "./assets/maiden.log";
+const SESSION_FILE: &str = "./assets/maiden.session";
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
-    // Initialize the logger
-    env_logger::init();
+    // Build and initialize the logger
+    let target = File::create(LOG_FILE).expect("failed to create log file");
+    Builder::new()
+        .target(Target::Pipe(Box::new(target)))
+        .filter_level(log::LevelFilter::Trace)
+        .format(|buf, record| {
+            let level = record.level();
+            if !matches!(level, log::Level::Trace | log::Level::Debug) {
+                println!(
+                    "[{} {}  {}:{}] {}",
+                    Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                    level,
+                    record.module_path().unwrap_or("unknown"),
+                    record.line().unwrap_or(0),
+                    record.args()
+                );
+            }
+
+            writeln!(
+                buf,
+                "[{} {}  {}:{}] {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                level,
+                record.file().unwrap_or("unknown"),
+                record.line().unwrap_or(0),
+                record.args()
+            )
+        })
+        .init();
 
     // Load the environment variables
     dotenvy::dotenv()?;
