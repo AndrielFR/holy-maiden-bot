@@ -1,5 +1,6 @@
 /target
 
+*.log
 *.rs.bk
 *.sqlite*
 *.session
