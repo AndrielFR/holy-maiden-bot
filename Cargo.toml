@@ -8,22 +8,22 @@ grammers-friendly = { git = "https://github.com/AndrielFR/grammers-friendly", fe
 grammers-client = { git = "https://github.com/Lonami/grammers", features = [ "html" ] }
 rust-anilist = { git = "https://github.com/AndrielFR/rust-anilist" }
 
-rbs = "4.5.*"
-log = "0.4.*"
-rand = "0.8.*"
-toml = "0.8.*"
-tokio = { version = "1.40.*", default-features = false, features = [ "macros", "sync", "signal" ] }
-serde = { version = "1.0.*", features = ["derive"] }
-chrono = "0.4.*"
-rbatis = "4.5.*"
-dotenvy = "0.15.*"
-reqwest = "0.12.*"
-env_logger = "0.11.*"
-serde_json = "1.0.*"
-async-trait = "0.1.*"
-rbdc-sqlite = "4.5.*"
-futures-util = { version = "0.3.*", default-features = false, features = [ "alloc" ] }
-rbdc-pool-deadpool = "4.5.*"
+rbs = "4"
+log = "*"
+rand = "*"
+toml = "*"
+tokio = { version = "1", default-features = false, features = [ "macros", "sync", "signal" ] }
+serde = { version = "1", features = ["derive"] }
+chrono = "*"
+rbatis = "4"
+dotenvy = "*"
+reqwest = "*"
+env_logger = "*"
+serde_json = "1"
+async-trait = "*"
+rbdc-sqlite = "4"
+futures-util = { version = "*", default-features = false, features = [ "alloc" ] }
+rbdc-pool-deadpool = "4"
 
 [profile.release]
 lto = true
